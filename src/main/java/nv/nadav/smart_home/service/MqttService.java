@@ -1,26 +1,43 @@
 package nv.nadav.smart_home.service;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
+import nv.nadav.smart_home.dto.DeviceDto;
+import nv.nadav.smart_home.dto.DeviceUpdateDto;
+import nv.nadav.smart_home.exception.DeviceNotFoundException;
+import nv.nadav.smart_home.exception.DeviceValidationException;
+import nv.nadav.smart_home.model.Device;
+import nv.nadav.smart_home.model.parameters.AirConditionerParameters;
+import nv.nadav.smart_home.serialization.DelegatingParametersDeserializer;
+import nv.nadav.smart_home.serialization.DeviceParametersDeserializer;
 import org.eclipse.paho.mqttv5.client.*;
 import org.eclipse.paho.mqttv5.common.MqttException;
 import org.eclipse.paho.mqttv5.common.MqttMessage;
 import org.eclipse.paho.mqttv5.common.packet.MqttProperties;
+import org.eclipse.paho.mqttv5.common.packet.UserProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.LinkedList;
-import java.util.Optional;
-import java.util.Queue;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 
 @Service
 public class MqttService {
     private static final Logger logger = LoggerFactory.getLogger("smart_home.mqtt");
     private final MqttClient mqttClient;
+    private final DeviceService deviceService;
     private Queue<MessageRecord> messageQueue;
 
-    public MqttService(MqttClient client) {
+    @Autowired
+    public MqttService(MqttClient client, DeviceService deviceService) {
         mqttClient = client;
+        this.deviceService = deviceService;
         messageQueue = new LinkedList<>();
     }
 
@@ -45,7 +62,81 @@ public class MqttService {
 
                 @Override
                 public void messageArrived(String topic, MqttMessage message) throws Exception {
-                    logger.info("Message received [{}]: {}\n", topic, new String(message.getPayload()));
+                    MqttProperties props = message.getProperties();
+                    List<UserProperty> userProps = props.getUserProperties();
+                    String senderId = null;
+                    String senderGroup = null;
+                    for (UserProperty prop : userProps) {
+                        if ("sender_id".equals(prop.getKey())) {
+                            senderId = prop.getValue();
+                        } else if ("sender_group".equals(prop.getKey())) {
+                            senderGroup = prop.getValue();
+                        }
+                    }
+                    if (senderId == null) {
+                        logger.error("Message missing sender");
+                    }
+                    if (senderGroup == null) {
+                        logger.error("Message missing sender group");
+                    }
+                    if (mqttClient.getClientId().equals(senderId) || "backend".equals(senderGroup)) {
+                        return;
+                    }
+                    logger.info("Message received on topic {}", topic);
+
+                    String json = new String(message.getPayload(), StandardCharsets.UTF_8);
+
+                    // Extract device_id from topic:
+                    // expected format nadavnv-smart-home/devices/<device_id>/<method> or similar
+                    String[] topicSegments = topic.split("/");
+                    if (topicSegments.length == 4) {
+                        String deviceId = topicSegments[2];
+                        Method method;
+                        try {
+                            method = Method.fromValue(topicSegments[3]);
+                        } catch (IllegalArgumentException e) {
+                            logger.error("Unknown method {}", topicSegments[3], e);
+                            return;
+                        }
+                        ObjectMapper mapper = new ObjectMapper();
+                        switch (method) {
+                            case POST -> {
+                                try {
+                                    DeviceDto deviceDto = mapper.readValue(json, DeviceDto.class);
+                                    deviceService.addDevice(deviceDto);
+                                } catch (JsonProcessingException e) {
+                                    logger.error("Error parsing json", e);
+                                } catch (DeviceValidationException e) {
+                                    logger.error("Error validating {}", deviceId, e);
+                                }
+                            }
+                            case UPDATE -> {
+                                try {
+                                    DeviceDto device = deviceService.getDeviceById(deviceId);
+                                    DelegatingParametersDeserializer.delegate.set(
+                                            new DeviceParametersDeserializer(device.getType()));
+                                    DeviceUpdateDto update = mapper.readValue(json, DeviceUpdateDto.class);
+                                    deviceService.updateDevice(deviceId, update);
+                                } catch (DeviceNotFoundException e) {
+                                    logger.error("Device {} not found", deviceId, e);
+                                } catch (DeviceValidationException e) {
+                                    logger.error("Error validating {}", deviceId, e);
+                                } finally {
+                                    DelegatingParametersDeserializer.delegate.remove();
+                                }
+                            }
+                            case DELETE -> {
+                                try {
+                                    deviceService.deleteDeviceById(deviceId);
+                                } catch (DeviceNotFoundException e) {
+                                    logger.error("Device {} not found", deviceId, e);
+                                }
+                            }
+                        }
+                    } else {
+                        logger.error("Incorrect topic {}", topic);
+                    }
+
                 }
 
                 @Override
@@ -70,7 +161,7 @@ public class MqttService {
 
                 @Override
                 public void authPacketArrived(int reasonCode, MqttProperties mqttProperties) {
-
+                    logger.info("Auth packet arrived");
                 }
             });
             MqttConnectionOptions options = new MqttConnectionOptions();
@@ -79,13 +170,66 @@ public class MqttService {
 
             mqttClient.connect(options);
 
-            mqttClient.subscribe(Optional.ofNullable(System.getenv("MQTT_TOPIC")).orElse("nadavnv-smart-home/devices") + "/#", 2);
+            mqttClient.subscribe("$share/backend/" + Optional.ofNullable(System.getenv("MQTT_TOPIC"))
+                    .orElse("nadavnv-smart-home/devices") + "/#", 2);
 
             System.out.println("MQTT connected and subscribed");
         } catch (MqttException e) {
             logger.error("Error while establishing MQTT client", e);
         }
+    }
 
+    public enum Method {
+        POST("post"),
+        UPDATE("update"),
+        DELETE("delete");
 
+        private final String value;
+
+        Method(String value) {
+            this.value = value;
+        }
+
+        @JsonValue
+        public String getValue() {
+            return value;
+        }
+
+        @JsonCreator
+        public static Method fromValue(String value) {
+            for (Method method : Method.values()) {
+                if (method.value.equalsIgnoreCase(value)) {
+                    return method;
+                }
+            }
+            throw new IllegalArgumentException("Unknown method: " + value);
+        }
+    }
+
+    public void publishMqtt(Map<String, Object> payload, String topicPrefix, String deviceId, Method method) {
+        String topic = String.format("%s/%s/%s", topicPrefix, deviceId, method.value);
+        payload.remove("_id");  // Discard mongoDB _id field if present
+        String jsonPayload;
+        try {
+            jsonPayload = new ObjectMapper().writeValueAsString(payload);
+        } catch (JsonProcessingException e) {
+            logger.error("Error processing payload", e);
+            return;
+        }
+        MqttProperties props = new MqttProperties();
+        props.setUserProperties(List.of(
+                new UserProperty("sender_id", mqttClient.getClientId()),
+                new UserProperty("sender_group", "backend")
+        ));
+
+        MqttMessage message = new MqttMessage(jsonPayload.getBytes(StandardCharsets.UTF_8));
+        message.setQos(2);
+        message.setProperties(props);
+        try {
+            mqttClient.publish(topic, message);
+        } catch (MqttException e) {
+            logger.error("Error trying to publish", e);
+            messageQueue.add(new MessageRecord(topic, message));
+        }
     }
 }

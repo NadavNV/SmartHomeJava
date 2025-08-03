@@ -7,12 +7,14 @@ import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
 
 @Document(collection = "devices")
 public class Device {
     @Id
     private ObjectId _id;
     @Indexed(unique = true)
+    @Field("id")
     private String deviceId;
     private DeviceType type;
     private String name;
@@ -88,6 +90,6 @@ public class Device {
     }
 
     public void update(DeviceUpdateDto data) {
-        
+
     }
 }

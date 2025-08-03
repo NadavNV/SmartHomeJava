@@ -13,7 +13,8 @@ public class DelegatingParametersDeserializer extends JsonDeserializer<DevicePar
     public static final ThreadLocal<JsonDeserializer<DeviceParameters>> delegate = new ThreadLocal<>();
 
     @Override
-    public DeviceParameters deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException, JacksonException {
+    public DeviceParameters deserialize(JsonParser jsonParser, DeserializationContext deserializationContext)
+            throws IOException {
         JsonDeserializer<DeviceParameters> injected = delegate.get();
         if (injected == null) {
             throw new IllegalStateException("No delegate deserializer set");

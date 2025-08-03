@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import nv.nadav.smart_home.model.parameters.DeviceParameters;
 import nv.nadav.smart_home.serialization.DelegatingParametersDeserializer;
 
+import java.util.Map;
+
 @JsonIgnoreProperties(ignoreUnknown = false)
 public class DeviceUpdateDto {
     private String name;
@@ -45,7 +47,7 @@ public class DeviceUpdateDto {
         this.parameters = parameters;
     }
 
-    public static DeviceUpdateDto from(DeviceDto dto) {
+    public static DeviceUpdateDto fromDto(DeviceDto dto) {
         DeviceUpdateDto updateDto = new DeviceUpdateDto();
         updateDto.setName(dto.getName());
         updateDto.setRoom(dto.getRoom());

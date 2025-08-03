@@ -15,4 +15,6 @@ public interface DeviceRepository extends MongoRepository<Device, ObjectId> {
 
     @Query(value = "{}", fields = "{ 'deviceId': 1, '_id': 0 }")
     List<String> getDeviceIds();
+
+    boolean existsByDeviceId(String deviceId);
 }
