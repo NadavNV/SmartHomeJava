@@ -1,0 +1,35 @@
+<configuration>
+
+    <!-- Define the log pattern -->
+    <property name="LOG_PATTERN" value="[%d{yyyy-MM-dd HH:mm:ss}] %-5level in %logger{36}: %msg%n"/>
+
+    <!-- Console Appender -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Rolling File Appender -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/backend.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeBasedRollingPolicy">
+            <!-- Rotate when log file reaches 1MB -->
+            <maxFileSize>1MB</maxFileSize>
+            <maxHistory>3</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Root logger -->
+    <root level="INFO">
+        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="FILE"/>
+    </root>
+
+    <!-- Smart Home package logger -->
+    <logger name="smart_home" level="INFO" additivity="true"/>
+
+</configuration>
