@@ -25,13 +25,18 @@ public class DeviceTrackingServiceImpl implements DeviceTrackingService {
     }
 
     @Override
-    public boolean isDeviceSeen(String deviceId) {
+    public boolean isDeviceNew(String deviceId) {
         return redis.sismember("seen_devices", deviceId);
     }
 
     @Override
     public void markDeviceSeen(String deviceId) {
         redis.sadd("seen_devices", deviceId);
+    }
+
+    @Override
+    public void removeDeviceSeen(String deviceId) {
+        redis.srem("seen_devices", deviceId);
     }
 
     @Override
@@ -78,7 +83,7 @@ public class DeviceTrackingServiceImpl implements DeviceTrackingService {
     }
 
     @Override
-    public void closeLastInterval(String deviceId, Instant endTime) {
+    public double closeLastInterval(String deviceId, Instant endTime) {
         List<Interval> intervals = getDeviceIntervals(deviceId);
         if (intervals.isEmpty()) {
             throw new IllegalStateException("No intervals found for device " + deviceId);
@@ -89,7 +94,9 @@ public class DeviceTrackingServiceImpl implements DeviceTrackingService {
             throw new IllegalStateException("Last interval already closed for device " + deviceId);
         }
 
-        intervals.set(intervals.size() - 1, new Interval(last.start(), endTime));
+        Interval newInterval = new Interval(last.start(), endTime);
+        intervals.set(intervals.size() - 1, newInterval);
         saveDeviceIntervals(deviceId, intervals);
+        return newInterval.getDuration();
     }
 }
