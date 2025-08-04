@@ -1,6 +1,6 @@
 package nv.nadav.smart_home.service.impl;
 
-import nv.nadav.smart_home.exception.UserAlreadyExistsException;
+import nv.nadav.smart_home.exception.UserExistsException;
 import nv.nadav.smart_home.model.User;
 import nv.nadav.smart_home.repository.UserRepository;
 import nv.nadav.smart_home.service.UserService;
@@ -29,7 +29,7 @@ public class UserServiceImpl implements UserService {
             newUser.setRole("user");
             repo.insert(newUser);
         } else {
-            throw new UserAlreadyExistsException(String.format("Username %s is taken", username));
+            throw new UserExistsException(String.format("Username %s is taken", username));
         }
     }
 

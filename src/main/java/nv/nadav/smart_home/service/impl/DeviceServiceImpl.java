@@ -2,6 +2,7 @@ package nv.nadav.smart_home.service.impl;
 
 import nv.nadav.smart_home.dto.DeviceDto;
 import nv.nadav.smart_home.dto.DeviceUpdateDto;
+import nv.nadav.smart_home.exception.DeviceExistsException;
 import nv.nadav.smart_home.exception.DeviceNotFoundException;
 import nv.nadav.smart_home.exception.DeviceValidationException;
 import nv.nadav.smart_home.model.Device;
@@ -58,6 +59,9 @@ public class DeviceServiceImpl implements DeviceService {
 
     @Override
     public DeviceDto addDevice(DeviceDto deviceDto) {
+        if (repo.existsByDeviceId(deviceDto.getId())) {
+            throw new DeviceExistsException();
+        }
         Validators.ValidationResult validationResult = Validators.validateNewDeviceData(deviceDto);
         if (validationResult.isValid()) {
             Device newDevice = Device.fromDto(deviceDto);
@@ -135,5 +139,10 @@ public class DeviceServiceImpl implements DeviceService {
     @Override
     public List<String> getDeviceIds() {
         return repo.getDeviceIds();
+    }
+
+    @Override
+    public boolean existsByDeviceId(String deviceId) {
+        return repo.existsByDeviceId(deviceId);
     }
 }

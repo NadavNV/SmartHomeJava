@@ -18,4 +18,6 @@ public interface DeviceService {
 
     List<String> getDeviceIds();
 
+    boolean existsByDeviceId(String deviceId);
+
 }

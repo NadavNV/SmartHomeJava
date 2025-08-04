@@ -1,5 +1,6 @@
 package nv.nadav.smart_home.service.impl;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -29,6 +30,17 @@ public class JwtServiceImpl implements JwtService {
     @Override
     public String generateToken(String username, String role) {
         return generateToken(username, Map.of("role", role));
+    }
+
+    @Override
+    public String getRoleFromToken(String token) {
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(signingKey)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+
+        return claims.get("role", String.class);
     }
 
     public String generateToken(String username, Map<String, Object> additionalClaims) {
