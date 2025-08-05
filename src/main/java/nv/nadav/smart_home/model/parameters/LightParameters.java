@@ -20,11 +20,11 @@ public class LightParameters extends DeviceParameters {
     @JsonProperty("dynamic_color")
     private Boolean dynamicColor;
 
-    public int getBrightness() {
+    public Integer getBrightness() {
         return brightness;
     }
 
-    public void setBrightness(int brightness) {
+    public void setBrightness(Integer brightness) {
         this.brightness = brightness;
     }
 
@@ -36,19 +36,19 @@ public class LightParameters extends DeviceParameters {
         this.color = color;
     }
 
-    public boolean isDimmable() {
+    public Boolean isDimmable() {
         return isDimmable;
     }
 
-    public void setDimmable(boolean dimmable) {
+    public void setDimmable(Boolean dimmable) {
         isDimmable = dimmable;
     }
 
-    public boolean isDynamicColor() {
+    public Boolean isDynamicColor() {
         return dynamicColor;
     }
 
-    public void setDynamicColor(boolean dynamicColor) {
+    public void setDynamicColor(Boolean dynamicColor) {
         this.dynamicColor = dynamicColor;
     }
 

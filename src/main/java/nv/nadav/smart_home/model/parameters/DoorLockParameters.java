@@ -16,19 +16,19 @@ public class DoorLockParameters extends DeviceParameters {
     @JsonProperty("battery_level")
     private Integer batteryLevel;
 
-    public boolean isAutoLockEnabled() {
+    public Boolean isAutoLockEnabled() {
         return autoLockEnabled;
     }
 
-    public void setAutoLockEnabled(boolean autoLockEnabled) {
+    public void setAutoLockEnabled(Boolean autoLockEnabled) {
         this.autoLockEnabled = autoLockEnabled;
     }
 
-    public int getBatteryLevel() {
+    public Integer getBatteryLevel() {
         return batteryLevel;
     }
 
-    public void setBatteryLevel(int batteryLevel) {
+    public void setBatteryLevel(Integer batteryLevel) {
         this.batteryLevel = batteryLevel;
     }
 

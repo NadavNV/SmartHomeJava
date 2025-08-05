@@ -25,35 +25,35 @@ public class WaterHeaterParameters extends DeviceParameters {
     @JsonProperty("scheduled_off")
     private String scheduledOff;
 
-    public int getTemperature() {
+    public Integer getTemperature() {
         return temperature;
     }
 
-    public void setTemperature(int temperature) {
+    public void setTemperature(Integer temperature) {
         this.temperature = temperature;
     }
 
-    public int getTargetTemperature() {
+    public Integer getTargetTemperature() {
         return targetTemperature;
     }
 
-    public void setTargetTemperature(int targetTemperature) {
+    public void setTargetTemperature(Integer targetTemperature) {
         this.targetTemperature = targetTemperature;
     }
 
-    public boolean isHeating() {
+    public Boolean isHeating() {
         return isHeating;
     }
 
-    public void setHeating(boolean heating) {
+    public void setHeating(Boolean heating) {
         isHeating = heating;
     }
 
-    public boolean isTimerEnabled() {
+    public Boolean isTimerEnabled() {
         return timerEnabled;
     }
 
-    public void setTimerEnabled(boolean timerEnabled) {
+    public void setTimerEnabled(Boolean timerEnabled) {
         this.timerEnabled = timerEnabled;
     }
 

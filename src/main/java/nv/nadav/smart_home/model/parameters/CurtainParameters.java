@@ -12,11 +12,11 @@ import static nv.nadav.smart_home.validation.Validators.verifyTypeAndRange;
 public class CurtainParameters extends DeviceParameters {
     private Integer position;
 
-    public int getPosition() {
+    public Integer getPosition() {
         return position;
     }
 
-    public void setPosition(int position) {
+    public void setPosition(Integer position) {
         this.position = position;
     }
 

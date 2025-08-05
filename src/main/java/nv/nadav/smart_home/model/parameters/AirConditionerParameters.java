@@ -18,11 +18,11 @@ public class AirConditionerParameters extends DeviceParameters {
     private FanSpeed fanSpeed;
     private Swing swing;
 
-    public int getTemperature() {
+    public Integer getTemperature() {
         return temperature;
     }
 
-    public void setTemperature(int temperature) {
+    public void setTemperature(Integer temperature) {
         this.temperature = temperature;
     }
 
