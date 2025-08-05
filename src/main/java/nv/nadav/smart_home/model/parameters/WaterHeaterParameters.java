@@ -84,7 +84,8 @@ public class WaterHeaterParameters extends DeviceParameters {
             }
         }
         if (targetTemperature != null) {
-            ValidationResult result = verifyTypeAndRange(targetTemperature, "'target_temperature'", Integer.class, List.of(MIN_WATER_TEMP, MAX_WATER_TEMP));
+            ValidationResult result = verifyTypeAndRange(targetTemperature, "'target_temperature'", Integer.class,
+                    List.of(MIN_WATER_TEMP, MAX_WATER_TEMP));
             if (!result.isValid()) {
                 errors.addAll(result.errorMessages());
             }

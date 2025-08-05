@@ -1,10 +1,13 @@
 package nv.nadav.smart_home.validation;
 
 
+import jakarta.validation.Valid;
 import nv.nadav.smart_home.dto.DeviceDto;
 import nv.nadav.smart_home.model.DeviceType;
 import nv.nadav.smart_home.dto.DeviceUpdateDto;
 import nv.nadav.smart_home.model.parameters.DeviceParameters;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static nv.nadav.smart_home.constants.Constants.TIME_REGEX;
 import static nv.nadav.smart_home.constants.Constants.COLOR_REGEX;
@@ -20,12 +23,14 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 public class Validators {
+    private static final Logger logger = LoggerFactory.getLogger("smart_home.validation");
+
     public static boolean verifyTimeString(String s) {
         return Pattern.compile(TIME_REGEX).matcher(s).matches();
     }
 
     public static ValidationResult verifyTypeAndRange(Object value, String name, Class<?> cls, Object valueRange) {
-        if (cls == Integer.class) {
+        if (cls == Integer.class || cls == int.class) {
             int intValue;
             try {
                 if (value instanceof String) {
@@ -36,7 +41,8 @@ public class Validators {
                     throw new NumberFormatException();
                 }
             } catch (NumberFormatException e) {
-                String error = name + " must be a numeric string, got " + value + " instead.";
+                String error = String.format("'%s' must be a numeric string, got '%s' instead.", name, value);
+                logger.error(error);
                 return new ValidationResult(false, List.of(error));
             }
 
@@ -44,7 +50,8 @@ public class Validators {
                 int min = range[0];
                 int max = range[1];
                 if (intValue < min || intValue > max) {
-                    String error = String.format("%s must be between %d and %d, got %d instead.", name, min, max, intValue);
+                    String error = String.format("'%s' must be between %d and %d, got %d instead.", name, min, max, intValue);
+                    logger.error(error);
                     return new ValidationResult(false, List.of(error));
                 }
             }
@@ -53,26 +60,33 @@ public class Validators {
 
         if (!cls.isInstance(value)) {
             String error = name + " must be a " + cls.getSimpleName() + ", got " + value.getClass().getSimpleName() + " instead.";
+            logger.error(error);
             return new ValidationResult(false, List.of(error));
         }
 
         if (cls == String.class && value instanceof String strValue) {
             if (valueRange instanceof Set<?> set) {
                 if (!set.contains(strValue)) {
-                    String error = String.format("'%s' is not a valid value for %s. Must be one of %s.", strValue, name, set);
+                    String error = String.format(
+                            "'%s' is not a valid value for %s. Must be one of %s.", strValue, name, set
+                    );
+                    logger.error(error);
                     return new ValidationResult(false, List.of(error));
                 }
             } else if ("time".equals(valueRange)) {
                 if (!Pattern.compile(TIME_REGEX).matcher(strValue).matches()) {
-                    return new ValidationResult(false, List.of("'" + strValue + "' is not a valid ISO format time string."));
+                    String error = "'" + strValue + "' is not a valid ISO format time string.";
+                    logger.error(error);
+                    return new ValidationResult(false, List.of(error));
                 }
             } else if ("color".equals(valueRange)) {
                 if (!Pattern.compile(COLOR_REGEX).matcher(strValue).matches()) {
-                    return new ValidationResult(false, List.of("'" + strValue + "' is not a valid hex color string."));
+                    String error = "'" + strValue + "' is not a valid hex color string.";
+                    logger.error(error);
+                    return new ValidationResult(false, List.of(error));
                 }
             }
         }
-
         return new ValidationResult(true, null);
     }
 
@@ -132,7 +146,7 @@ public class Validators {
         }
     }
 
-    public static ValidationResult validateNewDeviceData(DeviceDto data) {
+    public static ValidationResult validateNewDeviceData(@Valid DeviceDto data) {
         List<String> errors = new ArrayList<>();
         ValidationResult result = validateStatus(data.getStatus(), data.getType());
         if (!result.isValid) {
@@ -142,6 +156,7 @@ public class Validators {
         if (!result.isValid) {
             errors.addAll(result.errorMessages);
         }
+
         if (errors.isEmpty()) {
             return new ValidationResult(true, null);
         } else {
