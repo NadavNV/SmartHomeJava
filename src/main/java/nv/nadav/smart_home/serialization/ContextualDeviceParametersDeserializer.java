@@ -1,6 +1,5 @@
 package nv.nadav.smart_home.serialization;
 
-import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.databind.*;
@@ -12,6 +11,10 @@ import java.io.IOException;
 
 public class ContextualDeviceParametersDeserializer extends JsonDeserializer<DeviceParameters> implements ContextualDeserializer {
     private final DeviceType type;
+
+    public ContextualDeviceParametersDeserializer() {
+        type = null;
+    }
 
     public ContextualDeviceParametersDeserializer(DeviceType type) {
         this.type = type;

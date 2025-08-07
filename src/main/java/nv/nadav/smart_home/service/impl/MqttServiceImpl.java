@@ -11,6 +11,7 @@ import nv.nadav.smart_home.exception.DeviceNotFoundException;
 import nv.nadav.smart_home.exception.DeviceValidationException;
 import nv.nadav.smart_home.serialization.DelegatingParametersDeserializer;
 import nv.nadav.smart_home.serialization.DeviceParametersDeserializer;
+import nv.nadav.smart_home.service.DeviceMetricsService;
 import nv.nadav.smart_home.service.DeviceService;
 import nv.nadav.smart_home.service.MqttService;
 import org.eclipse.paho.mqttv5.client.*;
@@ -32,14 +33,21 @@ public class MqttServiceImpl implements MqttService {
     private final Validator validator;
     private final MqttClient mqttClient;
     private final DeviceService deviceService;
+    private final DeviceMetricsService metricsService;
     private Queue<MessageRecord> messageQueue;
 
     @Autowired
-    public MqttServiceImpl(MqttClient client, DeviceService deviceService, Validator validator) {
+    public MqttServiceImpl(
+            MqttClient client,
+            DeviceService deviceService,
+            Validator validator,
+            DeviceMetricsService metricsService
+    ) {
         mqttClient = client;
         this.deviceService = deviceService;
         messageQueue = new LinkedList<>();
         this.validator = validator;
+        this.metricsService = metricsService;
     }
 
     private record MessageRecord(String topic, MqttMessage message) {
@@ -113,6 +121,7 @@ public class MqttServiceImpl implements MqttService {
                                                 .toList());
                                     }
                                     deviceService.addDevice(deviceDto);
+                                    metricsService.addDevice(deviceDto);
                                 } catch (JsonProcessingException e) {
                                     logger.error("Error parsing json", e);
                                 } catch (DeviceValidationException e) {
@@ -122,10 +131,18 @@ public class MqttServiceImpl implements MqttService {
                             case UPDATE -> {
                                 try {
                                     DeviceDto device = deviceService.getDeviceById(deviceId);
+                                    logger.info("Original device type: {}", device.getType());
+                                    System.out.println(json);
                                     DelegatingParametersDeserializer.delegate.set(
                                             new DeviceParametersDeserializer(device.getType()));
                                     DeviceUpdateDto update = mapper.readValue(json, DeviceUpdateDto.class);
                                     deviceService.updateDevice(deviceId, update);
+                                    metricsService.updateDevice(
+                                            DeviceUpdateDto.fromDto(device),
+                                            update,
+                                            device.getType(),
+                                            deviceId
+                                    );
                                 } catch (DeviceNotFoundException e) {
                                     logger.error("Device {} not found", deviceId, e);
                                 } catch (DeviceValidationException e) {
@@ -137,6 +154,7 @@ public class MqttServiceImpl implements MqttService {
                             case DELETE -> {
                                 try {
                                     deviceService.deleteDeviceById(deviceId);
+                                    metricsService.deleteDevice(deviceId);
                                 } catch (DeviceNotFoundException e) {
                                     logger.error("Device {} not found", deviceId, e);
                                 }
@@ -181,7 +199,7 @@ public class MqttServiceImpl implements MqttService {
 
             mqttClient.subscribe("$share/backend/" + TOPIC + "/#", 2);
 
-            System.out.println("MQTT connected and subscribed");
+            logger.info("MQTT connected and subscribed");
         } catch (MqttException e) {
             logger.error("Error while establishing MQTT client", e);
         }
