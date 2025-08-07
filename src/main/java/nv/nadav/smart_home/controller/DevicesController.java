@@ -3,6 +3,7 @@ package nv.nadav.smart_home.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.validation.Valid;
 import nv.nadav.smart_home.dto.DeviceDto;
 import nv.nadav.smart_home.dto.DeviceUpdateDto;
 import nv.nadav.smart_home.exception.DeviceExistsException;
@@ -10,10 +11,7 @@ import nv.nadav.smart_home.exception.DeviceNotFoundException;
 import nv.nadav.smart_home.exception.DeviceValidationException;
 import nv.nadav.smart_home.serialization.DelegatingParametersDeserializer;
 import nv.nadav.smart_home.serialization.DeviceParametersDeserializer;
-import nv.nadav.smart_home.service.DeviceService;
-import nv.nadav.smart_home.service.DeviceTrackingService;
-import nv.nadav.smart_home.service.JwtService;
-import nv.nadav.smart_home.service.MqttService;
+import nv.nadav.smart_home.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,19 +25,19 @@ import java.util.Map;
 public class DevicesController {
 
     private final DeviceService deviceService;
-    private final DeviceTrackingService deviceTrackingService;
+    private final DeviceMetricsService deviceMetricsService;
     private final MqttService mqttService;
     private final JwtService jwtService;
 
     @Autowired
     public DevicesController(
             DeviceService deviceService,
-            DeviceTrackingService deviceTrackingService,
+            DeviceMetricsService deviceMetricsService,
             MqttService mqttService,
             JwtService jwtService
     ) {
         this.deviceService = deviceService;
-        this.deviceTrackingService = deviceTrackingService;
+        this.deviceMetricsService = deviceMetricsService;
         this.mqttService = mqttService;
         this.jwtService = jwtService;
     }
@@ -53,9 +51,7 @@ public class DevicesController {
     public ResponseEntity<List<DeviceDto>> getAllDevices() {
         List<DeviceDto> devices = deviceService.getAllDevices();
         for (DeviceDto device : devices) {
-            if (deviceTrackingService.isDeviceNew(device.getId())) {
-                deviceTrackingService.markDeviceSeen(device.getId());
-            }
+            deviceMetricsService.addDevice(device);
         }
         return ResponseEntity.ok(devices);
     }
@@ -64,9 +60,7 @@ public class DevicesController {
     public ResponseEntity<?> getDeviceById(@PathVariable("deviceId") String deviceId) {
         try {
             DeviceDto device = deviceService.getDeviceById(deviceId);
-            if (deviceTrackingService.isDeviceNew(deviceId)) {
-                deviceTrackingService.markDeviceSeen(deviceId);
-            }
+            deviceMetricsService.addDevice(device);
             return ResponseEntity.ok(device);
         } catch (DeviceNotFoundException e) {
             return ResponseEntity
@@ -76,10 +70,10 @@ public class DevicesController {
     }
 
     @PostMapping("devices")
-    public ResponseEntity<?> addDevice(@RequestBody DeviceDto newDevice) {
+    public ResponseEntity<?> addDevice(@Valid @RequestBody DeviceDto newDevice) {
         try {
             DeviceDto createdDevice = deviceService.addDevice(newDevice);
-            deviceTrackingService.markDeviceSeen(newDevice.getId());
+            deviceMetricsService.addDevice(createdDevice);
             ObjectMapper mapper = new ObjectMapper();
             Map<String, Object> payload = mapper.convertValue(createdDevice, new TypeReference<>() {
             });
@@ -113,7 +107,7 @@ public class DevicesController {
         }
 
         deviceService.deleteDeviceById(deviceId);
-        deviceTrackingService.removeDeviceSeen(deviceId);  // Allows adding a new device with old id
+        deviceMetricsService.deleteDevice(deviceId);  // Allows adding a new device with old id
         mqttService.publishMqtt(Map.of(), MqttService.TOPIC, deviceId, MqttService.Method.DELETE);
         return ResponseEntity.ok(Map.of("output", "Device was deleted from the database"));
     }
@@ -123,13 +117,12 @@ public class DevicesController {
         try {
             ObjectMapper mapper = new ObjectMapper();
             DeviceDto device = deviceService.getDeviceById(deviceId);
-            if (deviceTrackingService.isDeviceNew(deviceId)) {
-                deviceTrackingService.markDeviceSeen(deviceId);
-            }
+            deviceMetricsService.addDevice(device);
             DelegatingParametersDeserializer.delegate.set(
                     new DeviceParametersDeserializer(device.getType()));
             DeviceUpdateDto update = mapper.readValue(json, DeviceUpdateDto.class);
             deviceService.updateDevice(deviceId, update);
+            deviceMetricsService.updateDevice(DeviceUpdateDto.fromDto(device), update, device.getType(), deviceId);
             Map<String, Object> payload = mapper.convertValue(update, new TypeReference<>() {
             });
             mqttService.publishMqtt(payload, MqttService.TOPIC, deviceId, MqttService.Method.UPDATE);

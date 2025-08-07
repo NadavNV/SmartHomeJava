@@ -3,7 +3,6 @@ package nv.nadav.smart_home.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import nv.nadav.smart_home.model.DeviceType;
 import nv.nadav.smart_home.model.parameters.DeviceParameters;
@@ -22,7 +21,7 @@ public class DeviceDto {
     @NotBlank(message = "Status must be specified")
     private String status;
     @JsonProperty("parameters")
-    @NotEmpty(message = "Parameters must be provided")
+    @NotNull(message = "Parameters must be provided")
     @JsonDeserialize(using = ContextualDeviceParametersDeserializer.class)
     private DeviceParameters parameters;
 

@@ -57,13 +57,13 @@ public class LightParameters extends DeviceParameters {
         List<String> errors = new ArrayList<>();
 
         if (color != null) {
-            ValidationResult result = verifyTypeAndRange(color, "'color'", String.class, "color");
+            ValidationResult result = verifyTypeAndRange(color, "color", String.class, "color");
             if (!result.isValid()) {
                 errors.addAll(result.errorMessages());
             }
         }
         if (brightness != null) {
-            ValidationResult result = verifyTypeAndRange(brightness, "'brightness'", Integer.class, List.of(MIN_BRIGHTNESS, MAX_BRIGHTNESS));
+            ValidationResult result = verifyTypeAndRange(brightness, "brightness", Integer.class, List.of(MIN_BRIGHTNESS, MAX_BRIGHTNESS));
             if (!result.isValid()) {
                 errors.addAll(result.errorMessages());
             }
@@ -72,7 +72,7 @@ public class LightParameters extends DeviceParameters {
             if (isUpdate) {
                 errors.add("Cannot update read-only parameter 'is_dimmable'");
             } else {
-                ValidationResult result = verifyTypeAndRange(isDimmable, "'is_dimmable'", Boolean.class);
+                ValidationResult result = verifyTypeAndRange(isDimmable, "is_dimmable", Boolean.class);
                 if (!result.isValid()) {
                     errors.addAll(result.errorMessages());
                 }
@@ -82,7 +82,7 @@ public class LightParameters extends DeviceParameters {
             if (isUpdate) {
                 errors.add("Cannot update read-only parameter 'dynamic_color'");
             } else {
-                ValidationResult result = verifyTypeAndRange(dynamicColor, "'dynamic_color'", Boolean.class);
+                ValidationResult result = verifyTypeAndRange(dynamicColor, "dynamic_color", Boolean.class);
                 if (!result.isValid()) {
                     errors.addAll(result.errorMessages());
                 }

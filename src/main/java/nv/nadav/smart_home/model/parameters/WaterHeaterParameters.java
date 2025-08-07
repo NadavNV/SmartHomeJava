@@ -77,39 +77,21 @@ public class WaterHeaterParameters extends DeviceParameters {
     public ValidationResult validate(boolean isUpdate) {
         List<String> errors = new ArrayList<>();
 
-        if (temperature != null) {
-            ValidationResult result = verifyTypeAndRange(temperature, "'temperature'", Integer.class);
-            if (!result.isValid()) {
-                errors.addAll(result.errorMessages());
-            }
-        }
         if (targetTemperature != null) {
-            ValidationResult result = verifyTypeAndRange(targetTemperature, "'target_temperature'", Integer.class,
+            ValidationResult result = verifyTypeAndRange(targetTemperature, "target_temperature", Integer.class,
                     List.of(MIN_WATER_TEMP, MAX_WATER_TEMP));
             if (!result.isValid()) {
                 errors.addAll(result.errorMessages());
             }
         }
-        if (isHeating != null) {
-            ValidationResult result = verifyTypeAndRange(isHeating, "'is_heating'", Boolean.class);
-            if (!result.isValid()) {
-                errors.addAll(result.errorMessages());
-            }
-        }
-        if (timerEnabled != null) {
-            ValidationResult result = verifyTypeAndRange(timerEnabled, "'timer_enabled'", Boolean.class);
-            if (!result.isValid()) {
-                errors.addAll(result.errorMessages());
-            }
-        }
         if (scheduledOn != null) {
-            ValidationResult result = verifyTypeAndRange(scheduledOn, "'scheduled_on'", String.class, "time");
+            ValidationResult result = verifyTypeAndRange(scheduledOn, "scheduled_on", String.class, "time");
             if (!result.isValid()) {
                 errors.addAll(result.errorMessages());
             }
         }
         if (scheduledOff != null) {
-            ValidationResult result = verifyTypeAndRange(scheduledOff, "'scheduled_off'", String.class, "time");
+            ValidationResult result = verifyTypeAndRange(scheduledOff, "scheduled_off", String.class, "time");
             if (!result.isValid()) {
                 errors.addAll(result.errorMessages());
             }

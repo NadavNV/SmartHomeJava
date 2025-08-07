@@ -24,7 +24,7 @@ public class CurtainParameters extends DeviceParameters {
     public Validators.ValidationResult validate(boolean isUpdate) {
         List<String> errors = new ArrayList<>();
         if (position != null) {
-            Validators.ValidationResult result = verifyTypeAndRange(position, "'position'", Integer.class, List.of(MIN_POSITION, MAX_POSITION));
+            Validators.ValidationResult result = verifyTypeAndRange(position, "position", Integer.class, List.of(MIN_POSITION, MAX_POSITION));
             if (!result.isValid()) {
                 errors.addAll(result.errorMessages());
             }

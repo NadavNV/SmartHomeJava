@@ -3,6 +3,7 @@ package nv.nadav.smart_home.validation;
 import nv.nadav.smart_home.dto.DeviceDto;
 import nv.nadav.smart_home.dto.DeviceUpdateDto;
 import nv.nadav.smart_home.model.DeviceType;
+import nv.nadav.smart_home.model.parameters.AirConditionerParameters;
 import nv.nadav.smart_home.model.parameters.DoorLockParameters;
 import nv.nadav.smart_home.model.parameters.LightParameters;
 import nv.nadav.smart_home.model.parameters.WaterHeaterParameters;
@@ -44,7 +45,7 @@ public class ValidatorsTest {
     }
 
     @Test
-    void testVerifyTypeAndRangeIntValid() {
+    void testVerifyTypeAndRange_ValidInt() {
         assertTrue(verifyTypeAndRange(50, "test", int.class, List.of(49, 60)).isValid());
     }
 
@@ -53,35 +54,43 @@ public class ValidatorsTest {
     }
 
     @Test
-    void testVerifyTypeAndRangeIntInvalidOutOfRange() {
-        assertFalse(verifyTypeAndRange(70, "test", int.class, List.of(49, 60)).isValid());
+    void testVerifyTypeAndRange_InvalidIntOutOfRange() {
+        ValidationResult result = verifyTypeAndRange(70, "test", int.class, List.of(49, 60));
+        assertFalse(result.isValid());
         String error = String.format("'%s' must be between %d and %d, got %d instead.", "test", 49, 60, 70);
-        verify(mockLogger).error(error);
+        assertEquals(error, result.errorMessages().getFirst());
+
+        result = verifyTypeAndRange(70, "test", int.class, new int[]{49, 60});
+        assertFalse(result.isValid());
+        assertEquals(error, result.errorMessages().getFirst());
+        verify(mockLogger, times(2)).error(error);
     }
 
     @Test
-    void testVerifyTypeAndRangeIntInvalidString() {
+    void testVerifyTypeAndRange_InvalidIntString() {
         assertFalse(verifyTypeAndRange("Steve", "test", int.class, List.of(49, 60)).isValid());
         String error = String.format("'%s' must be a numeric string, got '%s' instead.", "test", "Steve");
         verify(mockLogger).error(error);
     }
     
     @Test
-    void testVerifyTypeAndRangeStringValid() {
+    void testVerifyTypeAndRange_ValidStringFromSet() {
         assertTrue(verifyTypeAndRange("on", "status", String.class, Set.of("on", "off")).isValid());
     }
 
     @Test
-    void testVerifyTypeAndRangeStringInvalid() {
-        assertFalse(verifyTypeAndRange("maybe", "status", String.class, Set.of("on", "off")).isValid());
+    void testVerifyTypeAndRange_InvalidStringFromSet() {
+        ValidationResult result = verifyTypeAndRange("maybe", "status", String.class, Set.of("on", "off"));
+        assertFalse(result.isValid());
         String error = String.format(
                 "'%s' is not a valid value for %s. Must be one of %s.", "maybe", "status", Set.of("on", "off")
-        );
+        );;
+        assertEquals(error, result.errorMessages().getFirst());
         verify(mockLogger).error(error);
     }
 
     @Test
-    void testVerifyTypeAndRangeTime() {
+    void testVerifyTypeAndRange_Time() {
         assertTrue(verifyTypeAndRange("14:30", "test", String.class, "time").isValid());
         assertFalse(verifyTypeAndRange("25:30", "test", String.class, "time").isValid());
         assertFalse(verifyTypeAndRange("14:69", "test", String.class, "time").isValid());
@@ -90,7 +99,7 @@ public class ValidatorsTest {
     }
 
     @Test
-    void testVerifyTypeAndRangeColor() {
+    void testVerifyTypeAndRange_Color() {
         assertTrue(verifyTypeAndRange("#FFF", "color", String.class, "color").isValid());
         assertTrue(verifyTypeAndRange("#ffcc00", "color", String.class, "color").isValid());
         assertFalse(verifyTypeAndRange("blue", "color", String.class, "color").isValid());
@@ -121,7 +130,7 @@ public class ValidatorsTest {
     }
 
     @Test
-    void testVerifyTypeAndRangeWrongType() {
+    void testVerifyTypeAndRange_WrongType() {
         assertFalse(verifyTypeAndRange(123, "test", String.class, Set.of("on, off")).isValid());
         String error = "test" + " must be a " + String.class.getSimpleName() + ", got " +
                 Integer.valueOf(123).getClass().getSimpleName() + " instead.";
@@ -129,7 +138,7 @@ public class ValidatorsTest {
     }
 
     @Test
-    void testValidateNewDeviceDataValidLight() {
+    void testValidateNewDeviceData_ValidLight() {
         DeviceDto device = new DeviceDto();
         device.setId("light01");
         device.setName("Ceiling Light");
@@ -146,7 +155,7 @@ public class ValidatorsTest {
     }
 
     @Test
-    void testValidateNewDeviceDataInvalidStatus() {
+    void testValidateNewDeviceData_InvalidStatus() {
         DeviceDto device = new DeviceDto();
         device.setId("light01");
         device.setName("Ceiling Light");
@@ -165,7 +174,7 @@ public class ValidatorsTest {
     }
 
     @Test
-    void testValidateNewDeviceDataInvalidParameters() {
+    void testValidateNewDeviceData_InvalidParameters() {
         DeviceDto device = new DeviceDto();
         device.setId("light01");
         device.setName("Ceiling Light");
@@ -198,7 +207,7 @@ public class ValidatorsTest {
     }
 
     @Test
-    void testValidateDeviceDataValidLock() {
+    void testValidateDeviceData_ValidLock() {
         DeviceUpdateDto device = new DeviceUpdateDto();
         DoorLockParameters parameters = new DoorLockParameters();
         device.setStatus("locked");
@@ -208,7 +217,7 @@ public class ValidatorsTest {
     }
 
     @Test
-    void testValidateDeviceDataWrongType() {
+    void testValidateDeviceData_WrongType() {
         DeviceUpdateDto device = new DeviceUpdateDto();
         DoorLockParameters parameters = new DoorLockParameters();
         device.setStatus("locked");
@@ -218,7 +227,7 @@ public class ValidatorsTest {
     }
 
     @Test
-    void testValidateDeviceDataInvalidStatus() {
+    void testValidateDeviceData_InvalidStatus() {
         DeviceUpdateDto device = new DeviceUpdateDto();
         DoorLockParameters parameters = new DoorLockParameters();
         device.setStatus("open");
@@ -228,7 +237,7 @@ public class ValidatorsTest {
     }
 
     @Test
-    void testValidateDeviceDataInvalidReadOnly() {
+    void testValidateDeviceData_InvalidReadOnly() {
         DeviceUpdateDto device = new DeviceUpdateDto();
         LightParameters parameters = new LightParameters();
         parameters.setDimmable(true);
@@ -237,7 +246,7 @@ public class ValidatorsTest {
     }
 
     @Test
-    void testValidateDeviceDataValidWaterHeater() {
+    void testValidateDeviceData_ValidWaterHeater() {
         DeviceUpdateDto device = new DeviceUpdateDto();
         WaterHeaterParameters parameters = new WaterHeaterParameters();
         parameters.setTargetTemperature((MIN_WATER_TEMP + MAX_WATER_TEMP) / 2);
@@ -247,102 +256,61 @@ public class ValidatorsTest {
         assertTrue(validateDeviceData(device, DeviceType.WATER_HEATER).isValid());
     }
 
-
-
-    def test_invalid_water_heater_too_hot(self):
-    device = {
-        "status": "on",
-                "parameters": {
-            "temperature": (MIN_WATER_TEMP + MAX_WATER_TEMP) // 2,
-            "target_temperature": MAX_WATER_TEMP + 1,
-                    "is_heating": True,
-                    "timer_enabled": False,
-                    "scheduled_on": "08:00",
-                    "scheduled_off": "10:00"
-        }
+    @Test
+    void testValidateDeviceData_InvalidWaterHeaterTooHot() {
+        DeviceUpdateDto device = new DeviceUpdateDto();
+        WaterHeaterParameters parameters = new WaterHeaterParameters();
+        parameters.setTargetTemperature(MAX_WATER_TEMP + 1);
+        parameters.setScheduledOff("10:00");
+        device.setStatus("on");
+        device.setParameters(parameters);
+        assertFalse(validateDeviceData(device, DeviceType.WATER_HEATER).isValid());
     }
-    result = validate_device_data(device, device_type="water_heater")
-        self.assertFalse(result[0])
-            self.assertEqual(len(result[1]), 1, "Incorrect number of errors")
-            self.assertIn(f"'target_temperature' must be between {MIN_WATER_TEMP} and {MAX_WATER_TEMP}, got "
-    f"{MAX_WATER_TEMP + 1} instead.", result[1], "Incorrect error message")
-            self.mock_logger.error.assert_called()
 
-    def test_invalid_water_heater_too_cold(self):
-    device = {
-        "status": "on",
-                "parameters": {
-            "temperature": (MIN_WATER_TEMP + MAX_WATER_TEMP) // 2,
-            "target_temperature": MIN_WATER_TEMP - 1,
-                    "is_heating": True,
-                    "timer_enabled": False,
-                    "scheduled_on": "08:00",
-                    "scheduled_off": "10:00"
-        }
+    @Test
+    void testValidateDeviceData_InvalidWaterHeaterTooCold() {
+        DeviceUpdateDto device = new DeviceUpdateDto();
+        WaterHeaterParameters parameters = new WaterHeaterParameters();
+        parameters.setTargetTemperature(MIN_WATER_TEMP - 1);
+        parameters.setScheduledOff("10:00");
+        device.setStatus("on");
+        device.setParameters(parameters);
+        assertFalse(validateDeviceData(device, DeviceType.WATER_HEATER).isValid());
     }
-    result = validate_device_data(device, device_type="water_heater")
-        self.assertFalse(result[0])
-            self.assertEqual(len(result[1]), 1, "Incorrect number of errors")
-            self.assertIn(f"'target_temperature' must be between {MIN_WATER_TEMP} and {MAX_WATER_TEMP}, got "
-    f"{MIN_WATER_TEMP - 1} instead.", result[1], "Incorrect error message")
-            self.mock_logger.error.assert_called()
 
-    def test_valid_ac(self):
-    device = {
-        "status": "on",
-                "parameters": {
-            "temperature": (MIN_AC_TEMP + MAX_AC_TEMP) // 2,
-            "mode": "cool",
-                    "fan_speed": "medium",
-                    "swing": "auto"
-        }
+    @Test
+    void testValidateDeviceData_ValidAc() {
+        DeviceUpdateDto device = new DeviceUpdateDto();
+        AirConditionerParameters parameters = new AirConditionerParameters();
+        parameters.setTemperature((MIN_AC_TEMP + MAX_AC_TEMP) / 2);
+        parameters.setMode(AirConditionerParameters.Mode.COOL);
+        parameters.setFanSpeed(AirConditionerParameters.FanSpeed.MEDIUM);
+        device.setStatus("on");
+        device.setParameters(parameters);
+        assertTrue(validateDeviceData(device, DeviceType.AIR_CONDITIONER).isValid());
     }
-    result = validate_device_data(device, device_type="air_conditioner")
-        self.assertEqual(result, (True, []))
 
-    def test_invalid_ac_too_hot(self):
-    device = {
-        "status": "on",
-                "parameters": {
-            "temperature": MAX_AC_TEMP + 1,
-                    "mode": "cool",
-                    "fan_speed": "medium",
-                    "swing": "auto"
-        }
+    @Test
+    void testValidateDeviceData_InvalidAcTooHot() {
+        DeviceUpdateDto device = new DeviceUpdateDto();
+        AirConditionerParameters parameters = new AirConditionerParameters();
+        parameters.setTemperature(MAX_AC_TEMP + 1);
+        parameters.setMode(AirConditionerParameters.Mode.COOL);
+        parameters.setFanSpeed(AirConditionerParameters.FanSpeed.MEDIUM);
+        device.setStatus("on");
+        device.setParameters(parameters);
+        assertFalse(validateDeviceData(device, DeviceType.AIR_CONDITIONER).isValid());
     }
-    result = validate_device_data(device, device_type="air_conditioner")
-        self.assertFalse(result[0])
-            self.assertEqual(len(result[1]), 1, "Incorrect number of errors")
-            self.assertIn(f"'temperature' must be between {MIN_AC_TEMP} and {MAX_AC_TEMP}, got "
-    f"{MAX_AC_TEMP + 1} instead.", result[1], "Incorrect error message")
-            self.mock_logger.error.assert_called()
 
-    def test_invalid_ac_too_cold(self):
-    device = {
-        "status": "on",
-                "parameters": {
-            "temperature": MIN_AC_TEMP - 1,
-                    "mode": "cool",
-                    "fan_speed": "medium",
-                    "swing": "auto"
-        }
+    @Test
+    void testValidateDeviceData_InvalidAcTooCold() {
+        DeviceUpdateDto device = new DeviceUpdateDto();
+        AirConditionerParameters parameters = new AirConditionerParameters();
+        parameters.setTemperature(MIN_AC_TEMP - 1);
+        parameters.setMode(AirConditionerParameters.Mode.COOL);
+        parameters.setFanSpeed(AirConditionerParameters.FanSpeed.MEDIUM);
+        device.setStatus("on");
+        device.setParameters(parameters);
+        assertFalse(validateDeviceData(device, DeviceType.AIR_CONDITIONER).isValid());
     }
-    result = validate_device_data(device, device_type="air_conditioner")
-        self.assertFalse(result[0])
-            self.assertEqual(len(result[1]), 1, "Incorrect number of errors")
-            self.assertIn(f"'temperature' must be between {MIN_AC_TEMP} and {MAX_AC_TEMP}, got "
-    f"{MIN_AC_TEMP - 1} instead.", result[1], "Incorrect error message")
-            self.mock_logger.error.assert_called()
-
-    def test_update_id_and_type(self):
-    device = {
-        "id": "test",
-                "type": "light",
-    }
-    result = validate_device_data(device, device_type="light")
-        self.assertFalse(result[0])
-            self.assertEqual(len(result[1]), 2, "Incorrect number of errors")
-            self.assertIn("Cannot update read-only parameter 'id'", result[1], "Incorrect error message")
-            self.assertIn("Cannot update read-only parameter 'type'", result[1], "Incorrect error message")
-
 }

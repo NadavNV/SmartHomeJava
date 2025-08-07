@@ -45,15 +45,28 @@ public class Validators {
                 logger.error(error);
                 return new ValidationResult(false, List.of(error));
             }
-
+            Integer min = null;
+            Integer max = null;
             if (valueRange instanceof int[] range && range.length == 2) {
-                int min = range[0];
-                int max = range[1];
-                if (intValue < min || intValue > max) {
-                    String error = String.format("'%s' must be between %d and %d, got %d instead.", name, min, max, intValue);
-                    logger.error(error);
-                    return new ValidationResult(false, List.of(error));
-                }
+                min = range[0];
+                max = range[1];
+            } else if (valueRange instanceof List<?> listRange
+                    && listRange.size() == 2
+                    && listRange.get(0) instanceof Integer
+                    && listRange.get(1) instanceof Integer) {
+                min = (Integer) listRange.get(0);
+                max = (Integer) listRange.get(1);
+            }
+            if (min == null) {
+                min = Integer.MIN_VALUE;
+            }
+            if (max == null) {
+                max = Integer.MAX_VALUE;
+            }
+            if (intValue < min || intValue > max) {
+                String error = String.format("'%s' must be between %d and %d, got %d instead.", name, min, max, intValue);
+                logger.error(error);
+                return new ValidationResult(false, List.of(error));
             }
             return new ValidationResult(true, null);
         }
@@ -146,7 +159,7 @@ public class Validators {
         }
     }
 
-    public static ValidationResult validateNewDeviceData(@Valid DeviceDto data) {
+    public static ValidationResult validateNewDeviceData(DeviceDto data) {
         List<String> errors = new ArrayList<>();
         ValidationResult result = validateStatus(data.getStatus(), data.getType());
         if (!result.isValid) {

@@ -3,6 +3,8 @@ package nv.nadav.smart_home.service.impl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
+import jakarta.validation.Validator;
+import jakarta.validation.ConstraintViolation;
 import nv.nadav.smart_home.dto.DeviceDto;
 import nv.nadav.smart_home.dto.DeviceUpdateDto;
 import nv.nadav.smart_home.exception.DeviceNotFoundException;
@@ -27,15 +29,17 @@ import java.util.*;
 @Service
 public class MqttServiceImpl implements MqttService {
     private static final Logger logger = LoggerFactory.getLogger("smart_home.mqtt");
+    private final Validator validator;
     private final MqttClient mqttClient;
     private final DeviceService deviceService;
     private Queue<MessageRecord> messageQueue;
 
     @Autowired
-    public MqttServiceImpl(MqttClient client, DeviceService deviceService) {
+    public MqttServiceImpl(MqttClient client, DeviceService deviceService, Validator validator) {
         mqttClient = client;
         this.deviceService = deviceService;
         messageQueue = new LinkedList<>();
+        this.validator = validator;
     }
 
     private record MessageRecord(String topic, MqttMessage message) {
@@ -102,6 +106,12 @@ public class MqttServiceImpl implements MqttService {
                             case POST -> {
                                 try {
                                     DeviceDto deviceDto = mapper.readValue(json, DeviceDto.class);
+                                    Set<ConstraintViolation<DeviceDto>> violations = validator.validate(deviceDto);
+                                    if (!violations.isEmpty()) {
+                                        throw new DeviceValidationException(violations.stream()
+                                                .map(ConstraintViolation::getMessage)
+                                                .toList());
+                                    }
                                     deviceService.addDevice(deviceDto);
                                 } catch (JsonProcessingException e) {
                                     logger.error("Error parsing json", e);

@@ -20,7 +20,7 @@ public class CounterManagerImpl implements CounterManager {
 
     public void increment(String name, String description, Map<String, String> tags) {
         String key = buildKey(name, tags);
-        Counter counter = counters.computeIfAbsent(key, k -> {
+        Counter counter = counters.computeIfAbsent(key, _ -> {
             Counter.Builder builder = Counter.builder(name).description(description);
             tags.forEach(builder::tag);
             return builder.register(registry);
@@ -30,7 +30,7 @@ public class CounterManagerImpl implements CounterManager {
 
     public void incrementBy(String name, String description, Map<String, String> tags, double amount) {
         String key = buildKey(name, tags);
-        Counter counter = counters.computeIfAbsent(key, k -> {
+        Counter counter = counters.computeIfAbsent(key, _ -> {
             Counter.Builder builder = Counter.builder(name).description(description);
             tags.forEach(builder::tag);
             return builder.register(registry);

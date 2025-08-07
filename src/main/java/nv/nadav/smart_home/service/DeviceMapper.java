@@ -8,7 +8,6 @@ import org.mapstruct.*;
 public interface DeviceMapper {
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    @Mapping(source = "id", target = "deviceId")
     @Mapping(target = "parameters", ignore = true)
     void updateDeviceFromDto(DeviceUpdateDto dto, @MappingTarget Device device);
 }

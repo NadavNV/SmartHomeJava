@@ -36,14 +36,8 @@ public class DoorLockParameters extends DeviceParameters {
     public ValidationResult validate(boolean isUpdate) {
         List<String> errors = new ArrayList<>();
 
-        if (autoLockEnabled != null) {
-            ValidationResult result = verifyTypeAndRange(autoLockEnabled, "'auto_lock_enabled'", Boolean.class);
-            if (!result.isValid()) {
-                errors.addAll(result.errorMessages());
-            }
-        }
         if (batteryLevel != null) {
-            ValidationResult result = verifyTypeAndRange(batteryLevel, "'battery_level'", Integer.class, List.of(MIN_BATTERY, MAX_BATTERY));
+            ValidationResult result = verifyTypeAndRange(batteryLevel, "battery_level", Integer.class, List.of(MIN_BATTERY, MAX_BATTERY));
             if (!result.isValid()) {
                 errors.addAll(result.errorMessages());
             }

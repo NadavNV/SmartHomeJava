@@ -54,7 +54,7 @@ public class AirConditionerParameters extends DeviceParameters {
     public ValidationResult validate(boolean isUpdate) {
         List<String> errors = new ArrayList<>();
         if (temperature != null) {
-            ValidationResult result = verifyTypeAndRange(temperature, "'temperature'", Integer.class, List.of(MIN_AC_TEMP, MAX_AC_TEMP));
+            ValidationResult result = verifyTypeAndRange(temperature, "temperature", Integer.class, List.of(MIN_AC_TEMP, MAX_AC_TEMP));
             if (!result.isValid()) {
                 errors.addAll(result.errorMessages());
             }
@@ -92,6 +92,11 @@ public class AirConditionerParameters extends DeviceParameters {
             }
             throw new IllegalArgumentException("Unknown mode: " + value);
         }
+
+        @Override
+        public String toString() {
+            return value;
+        }
     }
 
     public enum FanSpeed {
@@ -120,6 +125,11 @@ public class AirConditionerParameters extends DeviceParameters {
             }
             throw new IllegalArgumentException("Unknown fan speed: " + value);
         }
+
+        @Override
+        public String toString() {
+            return value;
+        }
     }
 
     public enum Swing {
@@ -146,6 +156,11 @@ public class AirConditionerParameters extends DeviceParameters {
                 }
             }
             throw new IllegalArgumentException("Unknown swing: " + value);
+        }
+
+        @Override
+        public String toString() {
+            return value;
         }
     }
 }

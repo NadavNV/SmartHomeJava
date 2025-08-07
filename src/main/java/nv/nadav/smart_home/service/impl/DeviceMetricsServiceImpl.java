@@ -77,10 +77,10 @@ public class DeviceMetricsServiceImpl implements DeviceMetricsService {
     @Override
     public void addDevice(DeviceDto device) {
         String deviceId = device.getId();
-        String deviceType = device.getType().getValue();
         if (trackingService.isDeviceNew(deviceId)) {
             logger.info("Device {} read from the database for the first time.", deviceId);
             logger.info("Adding device metrics.");
+            String deviceType = device.getType().getValue();
             counterManager.incrementBy(
                     "device_on_events_total",
                     metricDescriptions.get("device_on_events_total"),

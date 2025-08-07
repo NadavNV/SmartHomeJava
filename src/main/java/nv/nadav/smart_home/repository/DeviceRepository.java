@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface DeviceRepository extends MongoRepository<Device, ObjectId> {
-    List<Device> findByRoom(String room);
 
     Optional<Device> findByDeviceId(String deviceId);
 
