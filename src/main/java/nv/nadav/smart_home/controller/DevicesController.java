@@ -1,6 +1,6 @@
 package nv.nadav.smart_home.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
@@ -9,14 +9,13 @@ import nv.nadav.smart_home.dto.DeviceUpdateDto;
 import nv.nadav.smart_home.exception.DeviceExistsException;
 import nv.nadav.smart_home.exception.DeviceNotFoundException;
 import nv.nadav.smart_home.exception.DeviceValidationException;
-import nv.nadav.smart_home.serialization.DelegatingParametersDeserializer;
-import nv.nadav.smart_home.serialization.DeviceParametersDeserializer;
 import nv.nadav.smart_home.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -115,14 +114,12 @@ public class DevicesController {
     @PutMapping("devices/{deviceId}")
     public ResponseEntity<?> updateDevice(@PathVariable String deviceId, @RequestBody String json) {
         try {
-            ObjectMapper mapper = new ObjectMapper();
             DeviceDto device = deviceService.getDeviceById(deviceId);
             deviceMetricsService.addDevice(device);
-            DelegatingParametersDeserializer.delegate.set(
-                    new DeviceParametersDeserializer(device.getType()));
-            DeviceUpdateDto update = mapper.readValue(json, DeviceUpdateDto.class);
+            DeviceUpdateDto update = DeviceUpdateDto.deserialize(json, device.getType());
             deviceService.updateDevice(deviceId, update);
             deviceMetricsService.updateDevice(DeviceUpdateDto.fromDto(device), update, device.getType(), deviceId);
+            ObjectMapper mapper = new ObjectMapper();
             Map<String, Object> payload = mapper.convertValue(update, new TypeReference<>() {
             });
             mqttService.publishMqtt(payload, MqttService.TOPIC, deviceId, MqttService.Method.UPDATE);
@@ -131,12 +128,10 @@ public class DevicesController {
             return ResponseEntity
                     .status(HttpStatus.NOT_FOUND)
                     .body(Map.of("error", String.format("Device ID %s not found", deviceId)));
-        } catch (DeviceValidationException | JsonProcessingException e) {
+        } catch (DeviceValidationException | IOException e) {
             return ResponseEntity
                     .badRequest()
                     .body(Map.of("error", e.getMessage()));
-        } finally {
-            DelegatingParametersDeserializer.delegate.remove();
         }
     }
 }

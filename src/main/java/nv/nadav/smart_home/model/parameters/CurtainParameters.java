@@ -4,6 +4,7 @@ import nv.nadav.smart_home.validation.Validators;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static nv.nadav.smart_home.constants.Constants.MAX_POSITION;
 import static nv.nadav.smart_home.constants.Constants.MIN_POSITION;
@@ -35,5 +36,25 @@ public class CurtainParameters extends DeviceParameters {
         } else {
             return new Validators.ValidationResult(false, errors);
         }
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            // Same reference
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            // null or different class
+            return false;
+        }
+
+        CurtainParameters other = (CurtainParameters) obj;
+        return (Objects.equals(this.position, other.getPosition()));
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(position);
     }
 }

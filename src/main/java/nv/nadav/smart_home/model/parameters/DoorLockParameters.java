@@ -9,6 +9,7 @@ import static nv.nadav.smart_home.constants.Constants.MAX_BATTERY;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class DoorLockParameters extends DeviceParameters {
     @JsonProperty("auto_lock_enabled")
@@ -48,5 +49,27 @@ public class DoorLockParameters extends DeviceParameters {
         } else {
             return new ValidationResult(false, errors);
         }
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            // Same reference
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            // null or different class
+            return false;
+        }
+
+        DoorLockParameters other = (DoorLockParameters) obj;
+        return (Objects.equals(this.autoLockEnabled, other.isAutoLockEnabled()) &&
+                Objects.equals(this.batteryLevel, other.getBatteryLevel())
+        );
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(autoLockEnabled, batteryLevel);
     }
 }

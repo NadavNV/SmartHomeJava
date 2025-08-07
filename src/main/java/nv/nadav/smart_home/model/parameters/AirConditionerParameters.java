@@ -9,6 +9,7 @@ import static nv.nadav.smart_home.constants.Constants.MAX_AC_TEMP;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static nv.nadav.smart_home.validation.Validators.verifyTypeAndRange;
 
@@ -162,5 +163,29 @@ public class AirConditionerParameters extends DeviceParameters {
         public String toString() {
             return value;
         }
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            // Same reference
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            // null or different class
+            return false;
+        }
+
+        AirConditionerParameters other = (AirConditionerParameters) obj;
+        return (Objects.equals(this.temperature, other.getTemperature()) &&
+                Objects.equals(this.mode, other.getMode()) &&
+                Objects.equals(this.swing, other.getSwing()) &&
+                Objects.equals(this.fanSpeed, other.getFanSpeed())
+        );
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(temperature, mode, swing, fanSpeed);
     }
 }

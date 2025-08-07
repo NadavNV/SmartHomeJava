@@ -1,11 +1,15 @@
 package nv.nadav.smart_home.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import nv.nadav.smart_home.model.DeviceType;
 import nv.nadav.smart_home.model.parameters.DeviceParameters;
 import nv.nadav.smart_home.serialization.DelegatingParametersDeserializer;
+import nv.nadav.smart_home.serialization.DeviceParametersDeserializer;
 
-import java.util.Map;
+import java.io.IOException;
+import java.util.Objects;
 
 @JsonIgnoreProperties(ignoreUnknown = false)
 public class DeviceUpdateDto {
@@ -54,5 +58,39 @@ public class DeviceUpdateDto {
         updateDto.setStatus(dto.getStatus());
         updateDto.setParameters(dto.getParameters());
         return updateDto;
+    }
+
+    public static DeviceUpdateDto deserialize(String json, DeviceType deviceType) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        DelegatingParametersDeserializer.delegate.set(new DeviceParametersDeserializer(deviceType));
+        try {
+            return mapper.readValue(json, DeviceUpdateDto.class);
+        } finally {
+            DelegatingParametersDeserializer.delegate.remove();
+        }
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            // Same reference
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            // null or different class
+            return false;
+        }
+
+        DeviceUpdateDto other = (DeviceUpdateDto) obj;
+        return (Objects.equals(this.name, other.getName()) &&
+                Objects.equals(this.room, other.getRoom()) &&
+                Objects.equals(this.status, other.getStatus()) &&
+                Objects.equals(this.parameters, other.getParameters())
+        );
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, room, status, parameters);
     }
 }

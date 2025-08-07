@@ -5,6 +5,7 @@ import nv.nadav.smart_home.validation.Validators;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static nv.nadav.smart_home.constants.Constants.MAX_BRIGHTNESS;
 import static nv.nadav.smart_home.constants.Constants.MIN_BRIGHTNESS;
@@ -94,5 +95,29 @@ public class LightParameters extends DeviceParameters {
         } else {
             return new Validators.ValidationResult(false, errors);
         }
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            // Same reference
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            // null or different class
+            return false;
+        }
+
+        LightParameters other = (LightParameters) obj;
+        return (Objects.equals(this.brightness, other.getBrightness()) &&
+                Objects.equals(this.color, other.getColor()) &&
+                Objects.equals(this.isDimmable, other.isDimmable()) &&
+                Objects.equals(this.dynamicColor, other.isDynamicColor())
+        );
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(brightness, color, isDimmable, dynamicColor);
     }
 }

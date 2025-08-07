@@ -5,6 +5,7 @@ import nv.nadav.smart_home.validation.Validators;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static nv.nadav.smart_home.constants.Constants.MAX_WATER_TEMP;
 import static nv.nadav.smart_home.constants.Constants.MIN_WATER_TEMP;
@@ -102,5 +103,34 @@ public class WaterHeaterParameters extends DeviceParameters {
         } else {
             return new ValidationResult(false, errors);
         }
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            // Same reference
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            // null or different class
+            return false;
+        }
+
+        WaterHeaterParameters other = (WaterHeaterParameters) obj;
+        return (Objects.equals(this.temperature, other.getTemperature()) &&
+                Objects.equals(this.targetTemperature, other.getTargetTemperature()) &&
+                Objects.equals(this.isHeating, other.isHeating()) &&
+                Objects.equals(this.timerEnabled, other.isTimerEnabled()) &&
+                Objects.equals(this.scheduledOn, other.getScheduledOn()) &&
+                Objects.equals(this.scheduledOff, other.getScheduledOff())
+        );
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(
+                temperature, targetTemperature, isHeating,
+                timerEnabled, scheduledOff, scheduledOn
+        );
     }
 }

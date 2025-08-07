@@ -109,10 +109,11 @@ public class MqttServiceImpl implements MqttService {
                             logger.error("Unknown method {}", topicSegments[3], e);
                             return;
                         }
-                        ObjectMapper mapper = new ObjectMapper();
+
                         switch (method) {
                             case POST -> {
                                 try {
+                                    ObjectMapper mapper = new ObjectMapper();
                                     DeviceDto deviceDto = mapper.readValue(json, DeviceDto.class);
                                     Set<ConstraintViolation<DeviceDto>> violations = validator.validate(deviceDto);
                                     if (!violations.isEmpty()) {
@@ -131,11 +132,7 @@ public class MqttServiceImpl implements MqttService {
                             case UPDATE -> {
                                 try {
                                     DeviceDto device = deviceService.getDeviceById(deviceId);
-                                    logger.info("Original device type: {}", device.getType());
-                                    System.out.println(json);
-                                    DelegatingParametersDeserializer.delegate.set(
-                                            new DeviceParametersDeserializer(device.getType()));
-                                    DeviceUpdateDto update = mapper.readValue(json, DeviceUpdateDto.class);
+                                    DeviceUpdateDto update = DeviceUpdateDto.deserialize(json, device.getType());
                                     deviceService.updateDevice(deviceId, update);
                                     metricsService.updateDevice(
                                             DeviceUpdateDto.fromDto(device),
@@ -147,8 +144,6 @@ public class MqttServiceImpl implements MqttService {
                                     logger.error("Device {} not found", deviceId, e);
                                 } catch (DeviceValidationException e) {
                                     logger.error("Error validating {}", deviceId, e);
-                                } finally {
-                                    DelegatingParametersDeserializer.delegate.remove();
                                 }
                             }
                             case DELETE -> {

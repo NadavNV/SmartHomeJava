@@ -1,6 +1,5 @@
 package nv.nadav.smart_home.service.impl;
 
-import io.micrometer.core.instrument.MeterRegistry;
 import nv.nadav.smart_home.dto.DeviceDto;
 import nv.nadav.smart_home.dto.DeviceUpdateDto;
 import nv.nadav.smart_home.model.DeviceType;
@@ -18,9 +17,6 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
-import com.google.common.util.concurrent.AtomicDouble;
 
 @Service
 public class DeviceMetricsServiceImpl implements DeviceMetricsService {
@@ -88,8 +84,8 @@ public class DeviceMetricsServiceImpl implements DeviceMetricsService {
                     0.0
             );
             counterManager.incrementBy(
-                    "device_usage_seconds",
-                    metricDescriptions.get("device_usage_seconds"),
+                    "device_usage_seconds_total",
+                    metricDescriptions.get("device_usage_seconds_total"),
                     Map.of("device_id", deviceId, "device_type", deviceType),
                     0.0
             );
@@ -97,9 +93,6 @@ public class DeviceMetricsServiceImpl implements DeviceMetricsService {
             updateDevice(deviceValues, deviceValues, device.getType(), deviceId);
             trackingService.markDeviceSeen(deviceId);
         }
-    }
-
-    private record DeviceStatusKey(String id, String type) {
     }
 
     private void updateDeviceStatus(String deviceId, DeviceType deviceType, String oldStatus, String newStatus) {

@@ -1,14 +1,12 @@
 package nv.nadav.smart_home.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 import nv.nadav.smart_home.dto.DeviceDto;
 import nv.nadav.smart_home.dto.DeviceUpdateDto;
 import nv.nadav.smart_home.model.DeviceType;
 import nv.nadav.smart_home.model.parameters.WaterHeaterParameters;
-import nv.nadav.smart_home.serialization.DelegatingParametersDeserializer;
-import nv.nadav.smart_home.serialization.DeviceParametersDeserializer;
+import nv.nadav.smart_home.service.DeviceMetricsService;
 import nv.nadav.smart_home.service.DeviceService;
 import nv.nadav.smart_home.service.MqttService;
 import org.eclipse.paho.mqttv5.client.MqttCallback;
@@ -37,6 +35,9 @@ class MqttServiceImplTest {
     private DeviceService mockDeviceService;
 
     @Mock
+    private DeviceMetricsService mockMetricsService;
+
+    @Mock
     private Validator mockValidator;
 
     @InjectMocks
@@ -56,8 +57,9 @@ class MqttServiceImplTest {
 
     @AfterEach
     void tearDown() throws Exception {
-        DelegatingParametersDeserializer.delegate.remove();  // clean up ThreadLocal
-        if (mocks != null) mocks.close();
+        if (mocks != null) {
+            mocks.close();
+        }
     }
 
     @Test
@@ -110,6 +112,7 @@ class MqttServiceImplTest {
         callback.messageArrived(topic, message);
 
         verify(mockDeviceService).addDevice(any(DeviceDto.class));
+        verify(mockMetricsService).addDevice(any(DeviceDto.class));
     }
 
     @Test
@@ -124,6 +127,7 @@ class MqttServiceImplTest {
         callback.messageArrived(topic, message);
 
         verify(mockDeviceService, never()).addDevice(any());
+        verify(mockMetricsService, never()).addDevice(any());
     }
 
     @Test
@@ -137,6 +141,7 @@ class MqttServiceImplTest {
         callback.messageArrived(topic, message);
 
         verify(mockDeviceService, never()).addDevice(any());
+        verify(mockMetricsService, never()).addDevice(any());
     }
 
     @Test
@@ -167,6 +172,12 @@ class MqttServiceImplTest {
 
         ArgumentCaptor<DeviceUpdateDto> captor = ArgumentCaptor.forClass(DeviceUpdateDto.class);
         verify(mockDeviceService).updateDevice(eq(deviceId), captor.capture());
+        verify(mockMetricsService).updateDevice(
+                any(DeviceUpdateDto.class),
+                eq(updateDto),
+                eq(DeviceType.WATER_HEATER),
+                eq(deviceId)
+        );
 
         DeviceUpdateDto captured = captor.getValue();
         assertInstanceOf(WaterHeaterParameters.class, captured.getParameters());
