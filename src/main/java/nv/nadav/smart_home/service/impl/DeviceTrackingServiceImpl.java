@@ -41,13 +41,12 @@ public class DeviceTrackingServiceImpl implements DeviceTrackingService {
 
     @Override
     public List<Interval> getDeviceIntervals(String deviceId) {
-        String json = redis.hget("device_intervals", deviceId);
+        String json = redis.hget("device_on_intervals", deviceId);
         if (json == null) return new ArrayList<>();
         try {
             // Parse as List of [start, end] tuples
-            List<List<String>> rawList = objectMapper.readValue(json, new TypeReference<>() {
-            });
-            List<Interval> intervals = new ArrayList<>();
+            List<List<String>> rawList = objectMapper.readValue(json, new TypeReference<>() {});
+            List<Interval> intervals = new ArrayList<>(rawList.size());
             for (List<String> pair : rawList) {
                 Instant start = Instant.parse(pair.get(0));
                 Instant end = pair.get(1) != null ? Instant.parse(pair.get(1)) : null;
@@ -62,14 +61,15 @@ public class DeviceTrackingServiceImpl implements DeviceTrackingService {
     @Override
     public void saveDeviceIntervals(String deviceId, List<Interval> intervals) {
         List<List<String>> rawList = intervals.stream()
-                .map(i -> List.of(
-                        i.start().toString(),
-                        i.end() != null ? i.end().toString() : null
-                ))
-                .toList();
+                .map(i -> {
+                    List<String> interval = new ArrayList<>(2);
+                    interval.add(i.start().toString());
+                    interval.add(i.end() != null ? i.end().toString() : null);
+                    return interval;
+                }).toList();
         try {
             String json = objectMapper.writeValueAsString(rawList);
-            redis.hset("device_intervals", deviceId, json);
+            redis.hset("device_on_intervals", deviceId, json);
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Failed to serialize intervals", e);
         }
@@ -77,9 +77,7 @@ public class DeviceTrackingServiceImpl implements DeviceTrackingService {
 
     @Override
     public void startNewInterval(String deviceId, Instant startTime) {
-        List<Interval> intervals = getDeviceIntervals(deviceId);
-        intervals.add(new Interval(startTime, null));
-        saveDeviceIntervals(deviceId, intervals);
+        redis.rpush("device_on_intervals:" + deviceId, new Interval(startTime, null).toJson());
     }
 
     @Override
