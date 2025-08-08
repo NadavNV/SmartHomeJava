@@ -141,6 +141,7 @@ public class DeviceMetricsServiceImpl implements DeviceMetricsService {
     }
 
     private void flipDeviceBooleanFlag(String metricName, String deviceId, boolean newValue) {
+        System.out.println("Flipping metric " + metricName + " for " + deviceId + " to " + newValue);
         gaugeManager.setBooleanGauge(
                 metricName,
                 metricDescriptions.get(metricName),
@@ -225,14 +226,14 @@ public class DeviceMetricsServiceImpl implements DeviceMetricsService {
                     if (newIsDimmable != null) {
                         flipDeviceBooleanFlag(
                                 "light_is_dimmable",
-                                metricDescriptions.get("light_is_dimmable"),
+                                deviceId,
                                 newIsDimmable
                         );
                     }
                     if (newDynamicColor != null) {
                         flipDeviceBooleanFlag(
                                 "light_dynamic_color",
-                                metricDescriptions.get("light_dynamic_color"),
+                                deviceId,
                                 newDynamicColor
                         );
                     }

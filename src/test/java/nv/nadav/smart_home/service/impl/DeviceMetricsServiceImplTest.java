@@ -3,6 +3,7 @@ package nv.nadav.smart_home.service.impl;
 import nv.nadav.smart_home.dto.DeviceDto;
 import nv.nadav.smart_home.dto.DeviceUpdateDto;
 import nv.nadav.smart_home.model.DeviceType;
+import nv.nadav.smart_home.model.parameters.LightParameters;
 import nv.nadav.smart_home.service.CounterManager;
 import nv.nadav.smart_home.service.DeviceTrackingService;
 import nv.nadav.smart_home.service.GaugeManager;
@@ -10,6 +11,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -17,6 +19,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import static nv.nadav.smart_home.constants.Constants.*;
 
 public class DeviceMetricsServiceImplTest {
 
@@ -286,5 +289,134 @@ public class DeviceMetricsServiceImplTest {
         );
         verify(mockDeviceTracking, never()).startNewInterval(anyString(), any());
         verify(mockDeviceTracking, never()).closeLastInterval(anyString(), any());
+    }
+
+    @Test
+    void testUpdateDevice_lightParametersFull() {
+        LightParameters parameters = new LightParameters();
+        parameters.setBrightness((MIN_BRIGHTNESS + MAX_BRIGHTNESS) / 2);
+        parameters.setColor("#123456");
+        parameters.setDimmable(true);
+        parameters.setDynamicColor(false);
+        DeviceUpdateDto update = new DeviceUpdateDto();
+        update.setParameters(parameters);
+        String deviceId = "test";
+        DeviceType deviceType = DeviceType.LIGHT;
+        service.updateDevice(update, update, deviceType, deviceId);
+        InOrder inOrder = inOrder(mockGauges);
+        // Brightness
+        inOrder.verify(mockGauges, times(1)).setNumericGauge(
+                eq("light_brightness"),
+                anyString(),
+                eq(parameters.getBrightness().doubleValue()),
+                eq(Map.of("device_id", deviceId, "is_dimmable", Boolean.toString(parameters.isDimmable())))
+        );
+        // Color
+        inOrder.verify(mockGauges, times(1)).setNumericGauge(
+                eq("light_color"),
+                anyString(),
+                eq((double) Integer.parseInt(parameters.getColor().substring(1), 16)),
+                eq(Map.of("device_id", deviceId, "dynamic_color", Boolean.toString(parameters.isDynamicColor())))
+        );
+        inOrder.verify(mockGauges, times(1)).setBooleanGauge(
+                eq("light_color_info"),
+                anyString(),
+                eq(false),
+                eq(Map.of(
+                        "device_id", deviceId,
+                        "dynamic_color", Boolean.toString(parameters.isDynamicColor()),
+                        "color", parameters.getColor()
+                ))
+        );
+        inOrder.verify(mockGauges, times(1)).setBooleanGauge(
+                eq("light_color_info"),
+                anyString(),
+                eq(true),
+                eq(Map.of(
+                        "device_id", deviceId,
+                        "dynamic_color", Boolean.toString(parameters.isDynamicColor()),
+                        "color", parameters.getColor()
+                ))
+        );
+        // isDimmable
+        inOrder.verify(mockGauges, times(1)).setBooleanGauge(
+                eq("light_is_dimmable"),
+                anyString(),
+                eq(true),
+                eq(Map.of("device_id", deviceId, "state", "True"))
+        );
+        inOrder.verify(mockGauges, times(1)).setBooleanGauge(
+                eq("light_is_dimmable"),
+                anyString(),
+                eq(false),
+                eq(Map.of("device_id", deviceId, "state", "False"))
+        );
+        // dynamicColor
+        inOrder.verify(mockGauges, times(1)).setBooleanGauge(
+                eq("light_dynamic_color"),
+                anyString(),
+                eq(false),
+                eq(Map.of("device_id", deviceId, "state", "True"))
+        );
+        inOrder.verify(mockGauges, times(1)).setBooleanGauge(
+                eq("light_dynamic_color"),
+                anyString(),
+                eq(true),
+                eq(Map.of("device_id", deviceId, "state", "False"))
+        );
+    }
+
+    @Test
+    void testUpdateDevice_lightParametersNoNewBooleans() {
+        LightParameters oldParameters = new LightParameters();
+        oldParameters.setBrightness((MIN_BRIGHTNESS + MAX_BRIGHTNESS) / 2);
+        oldParameters.setColor("#654321");
+        oldParameters.setDimmable(true);
+        oldParameters.setDynamicColor(false);
+        DeviceUpdateDto original = new DeviceUpdateDto();
+        DeviceUpdateDto update = new DeviceUpdateDto();
+        original.setParameters(oldParameters);
+        LightParameters newParameters = new LightParameters();
+        newParameters.setBrightness((MIN_BRIGHTNESS + MAX_BRIGHTNESS) / 2);
+        newParameters.setColor("#123456");
+        update.setParameters(newParameters);
+        String deviceId = "test";
+        DeviceType deviceType = DeviceType.LIGHT;
+        service.updateDevice(original, update, deviceType, deviceId);
+        InOrder inOrder = inOrder(mockGauges);
+        // Brightness
+        inOrder.verify(mockGauges, times(1)).setNumericGauge(
+                eq("light_brightness"),
+                anyString(),
+                eq(newParameters.getBrightness().doubleValue()),
+                eq(Map.of("device_id", deviceId, "is_dimmable", Boolean.toString(oldParameters.isDimmable())))
+        );
+        // Color
+        inOrder.verify(mockGauges, times(1)).setNumericGauge(
+                eq("light_color"),
+                anyString(),
+                eq((double) Integer.parseInt(newParameters.getColor().substring(1), 16)),
+                eq(Map.of("device_id", deviceId, "dynamic_color", Boolean.toString(oldParameters.isDynamicColor())))
+        );
+        inOrder.verify(mockGauges, times(1)).setBooleanGauge(
+                eq("light_color_info"),
+                anyString(),
+                eq(false),
+                eq(Map.of(
+                        "device_id", deviceId,
+                        "dynamic_color", Boolean.toString(oldParameters.isDynamicColor()),
+                        "color", oldParameters.getColor()
+                ))
+        );
+        inOrder.verify(mockGauges, times(1)).setBooleanGauge(
+                eq("light_color_info"),
+                anyString(),
+                eq(true),
+                eq(Map.of(
+                        "device_id", deviceId,
+                        "dynamic_color", Boolean.toString(oldParameters.isDynamicColor()),
+                        "color", newParameters.getColor()
+                ))
+        );
     }
 }
