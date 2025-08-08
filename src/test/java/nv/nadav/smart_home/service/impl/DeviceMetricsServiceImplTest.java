@@ -3,7 +3,7 @@ package nv.nadav.smart_home.service.impl;
 import nv.nadav.smart_home.dto.DeviceDto;
 import nv.nadav.smart_home.dto.DeviceUpdateDto;
 import nv.nadav.smart_home.model.DeviceType;
-import nv.nadav.smart_home.model.parameters.LightParameters;
+import nv.nadav.smart_home.model.parameters.*;
 import nv.nadav.smart_home.service.CounterManager;
 import nv.nadav.smart_home.service.DeviceTrackingService;
 import nv.nadav.smart_home.service.GaugeManager;
@@ -418,5 +418,268 @@ public class DeviceMetricsServiceImplTest {
                         "color", newParameters.getColor()
                 ))
         );
+    }
+
+    @Test
+    void testUpdateDevice_waterHeaterFull() {
+        String deviceId = "test";
+        DeviceType deviceType = DeviceType.WATER_HEATER;
+        WaterHeaterParameters oldParameters = new WaterHeaterParameters();
+        WaterHeaterParameters newParameters = new WaterHeaterParameters();
+        oldParameters.setTargetTemperature((MIN_WATER_TEMP + MAX_WATER_TEMP) / 2);
+        oldParameters.setTemperature(24);
+        oldParameters.setHeating(false);
+        oldParameters.setTimerEnabled(true);
+        oldParameters.setScheduledOn("06:30");
+        oldParameters.setScheduledOff("08:00");
+        newParameters.setTargetTemperature(MAX_WATER_TEMP);
+        newParameters.setTemperature(23);
+        newParameters.setHeating(true);
+        newParameters.setTimerEnabled(false);
+        newParameters.setScheduledOn("10:00");
+        newParameters.setScheduledOff("12:30");
+        DeviceUpdateDto original = new DeviceUpdateDto();
+        DeviceUpdateDto update = new DeviceUpdateDto();
+        original.setParameters(oldParameters);
+        update.setParameters(newParameters);
+        service.updateDevice(original, update, deviceType, deviceId);
+        InOrder inOrder = inOrder(mockGauges);
+        // Temperature
+        inOrder.verify(mockGauges, times(1)).setNumericGauge(
+                eq("water_heater_temperature"),
+                anyString(),
+                eq(newParameters.getTemperature().doubleValue()),
+                eq(Map.of("device_id", deviceId))
+        );
+        // Target temperature
+        inOrder.verify(mockGauges, times(1)).setNumericGauge(
+                eq("water_heater_target_temperature"),
+                anyString(),
+                eq(newParameters.getTargetTemperature().doubleValue()),
+                eq(Map.of("device_id", deviceId))
+        );
+        // isHeating
+        inOrder.verify(mockGauges, times(1)).setBooleanGauge(
+                eq("water_heater_is_heating_status"),
+                anyString(),
+                eq(true),
+                eq(Map.of("device_id", deviceId, "state", "True"))
+        );
+        inOrder.verify(mockGauges, times(1)).setBooleanGauge(
+                eq("water_heater_is_heating_status"),
+                anyString(),
+                eq(false),
+                eq(Map.of("device_id", deviceId, "state", "False"))
+        );
+        // timerEnabled
+        inOrder.verify(mockGauges, times(1)).setBooleanGauge(
+                eq("water_heater_timer_enabled_status"),
+                anyString(),
+                eq(false),
+                eq(Map.of("device_id", deviceId, "state", "True"))
+        );
+        inOrder.verify(mockGauges, times(1)).setBooleanGauge(
+                eq("water_heater_timer_enabled_status"),
+                anyString(),
+                eq(true),
+                eq(Map.of("device_id", deviceId, "state", "False"))
+        );
+        // Schedule
+        inOrder.verify(mockGauges, times(1)).setNumericGauge(
+                eq("water_heater_schedule_info"),
+                anyString(),
+                eq(0.0),
+                eq(Map.of(
+                        "device_id", deviceId,
+                        "scheduled_on", oldParameters.getScheduledOn(),
+                        "scheduled_off", oldParameters.getScheduledOff()
+                ))
+        );
+        inOrder.verify(mockGauges, times(1)).setNumericGauge(
+                eq("water_heater_schedule_info"),
+                anyString(),
+                eq(1.0),
+                eq(Map.of(
+                        "device_id", deviceId,
+                        "scheduled_on", newParameters.getScheduledOn(),
+                        "scheduled_off", newParameters.getScheduledOff()
+                ))
+        );
+    }
+
+    @Test
+    void testUpdateDevice_waterHeaterScheduleOn() {
+        String deviceId = "test";
+        DeviceType deviceType = DeviceType.WATER_HEATER;
+        WaterHeaterParameters oldParameters = new WaterHeaterParameters();
+        WaterHeaterParameters newParameters = new WaterHeaterParameters();
+        oldParameters.setScheduledOn("06:30");
+        oldParameters.setScheduledOff("08:00");
+        newParameters.setScheduledOn("10:00");
+        DeviceUpdateDto original = new DeviceUpdateDto();
+        DeviceUpdateDto update = new DeviceUpdateDto();
+        original.setParameters(oldParameters);
+        update.setParameters(newParameters);
+        service.updateDevice(original, update, deviceType, deviceId);
+        InOrder inOrder = inOrder(mockGauges);
+
+        // Schedule
+        inOrder.verify(mockGauges, times(1)).setNumericGauge(
+                eq("water_heater_schedule_info"),
+                anyString(),
+                eq(0.0),
+                eq(Map.of(
+                        "device_id", deviceId,
+                        "scheduled_on", oldParameters.getScheduledOn(),
+                        "scheduled_off", oldParameters.getScheduledOff()
+                ))
+        );
+        inOrder.verify(mockGauges, times(1)).setNumericGauge(
+                eq("water_heater_schedule_info"),
+                anyString(),
+                eq(1.0),
+                eq(Map.of(
+                        "device_id", deviceId,
+                        "scheduled_on", newParameters.getScheduledOn(),
+                        "scheduled_off", oldParameters.getScheduledOff()
+                ))
+        );
+    }
+
+    @Test
+    void testUpdateDevice_waterHeaterScheduleOff() {
+        String deviceId = "test";
+        DeviceType deviceType = DeviceType.WATER_HEATER;
+        WaterHeaterParameters oldParameters = new WaterHeaterParameters();
+        WaterHeaterParameters newParameters = new WaterHeaterParameters();
+        oldParameters.setScheduledOn("06:30");
+        oldParameters.setScheduledOff("08:00");
+        newParameters.setScheduledOff("10:00");
+        DeviceUpdateDto original = new DeviceUpdateDto();
+        DeviceUpdateDto update = new DeviceUpdateDto();
+        original.setParameters(oldParameters);
+        update.setParameters(newParameters);
+        service.updateDevice(original, update, deviceType, deviceId);
+        InOrder inOrder = inOrder(mockGauges);
+
+        // Schedule
+        inOrder.verify(mockGauges, times(1)).setNumericGauge(
+                eq("water_heater_schedule_info"),
+                anyString(),
+                eq(0.0),
+                eq(Map.of(
+                        "device_id", deviceId,
+                        "scheduled_on", oldParameters.getScheduledOn(),
+                        "scheduled_off", oldParameters.getScheduledOff()
+                ))
+        );
+        inOrder.verify(mockGauges, times(1)).setNumericGauge(
+                eq("water_heater_schedule_info"),
+                anyString(),
+                eq(1.0),
+                eq(Map.of(
+                        "device_id", deviceId,
+                        "scheduled_on", oldParameters.getScheduledOn(),
+                        "scheduled_off", newParameters.getScheduledOff()
+                ))
+        );
+    }
+
+    @Test
+    void testUpdateDevice_airConditionerFull() {
+        String deviceId = "test";
+        DeviceType deviceType = DeviceType.AIR_CONDITIONER;
+        AirConditionerParameters parameters = new AirConditionerParameters();
+        parameters.setTemperature((MIN_AC_TEMP + MAX_AC_TEMP) / 2);
+        parameters.setMode(AirConditionerParameters.Mode.COOL);
+        parameters.setSwing(AirConditionerParameters.Swing.ON);
+        parameters.setFanSpeed(AirConditionerParameters.FanSpeed.MEDIUM);
+        DeviceUpdateDto update = new DeviceUpdateDto();
+        update.setParameters(parameters);
+        service.updateDevice(update, update, deviceType, deviceId);
+        // Temperature
+        verify(mockGauges, times(1)).setNumericGauge(
+                eq("ac_temperature"),
+                anyString(),
+                eq(parameters.getTemperature().doubleValue()),
+                eq(Map.of("device_id", deviceId))
+        );
+        // Mode
+        verify(mockGauges, times(1)).setEnumGauge(
+                eq("ac_mode_status"),
+                anyString(),
+                eq(parameters.getMode()),
+                eq(Map.of("device_id", deviceId))
+        );
+        // Fan Speed
+        verify(mockGauges, times(1)).setEnumGauge(
+                eq("ac_fan_status"),
+                anyString(),
+                eq(parameters.getFanSpeed()),
+                eq(Map.of("device_id", deviceId))
+        );
+        // Swing
+        verify(mockGauges, times(1)).setEnumGauge(
+                eq("ac_swing_status"),
+                anyString(),
+                eq(parameters.getSwing()),
+                eq(Map.of("device_id", deviceId))
+        );
+    }
+
+    @Test
+    void testUpdateDevice_doorLockFull() {
+        String deviceId = "test";
+        DeviceType deviceType = DeviceType.DOOR_LOCK;
+        DoorLockParameters parameters = new DoorLockParameters();
+        parameters.setBatteryLevel((MIN_BATTERY + MAX_BATTERY) / 2);
+        parameters.setAutoLockEnabled(true);
+        DeviceUpdateDto update = new DeviceUpdateDto();
+        update.setParameters(parameters);
+        service.updateDevice(update, update, deviceType, deviceId);
+        // Battery Leve
+        verify(mockGauges, times(1)).setNumericGauge(
+                eq("lock_battery_level"),
+                anyString(),
+                eq(parameters.getBatteryLevel().doubleValue()),
+                eq(Map.of("device_id", deviceId))
+        );
+        // Auto-Lock
+        InOrder inOrder = inOrder(mockGauges);
+        inOrder.verify(mockGauges, times(1)).setBooleanGauge(
+                eq("auto_lock_enabled"),
+                anyString(),
+                eq(true),
+                eq(Map.of("device_id", deviceId, "state", "True"))
+        );
+        inOrder.verify(mockGauges, times(1)).setBooleanGauge(
+                eq("auto_lock_enabled"),
+                anyString(),
+                eq(false),
+                eq(Map.of("device_id", deviceId, "state", "False"))
+        );
+    }
+
+    @Test
+    void testUpdateDevice_curtainFull() {
+        String deviceId = "test";
+        DeviceType deviceType = DeviceType.CURTAIN;
+        CurtainParameters parameters = new CurtainParameters();
+        parameters.setPosition((MIN_POSITION + MAX_POSITION) / 2);
+        DeviceUpdateDto update = new DeviceUpdateDto();
+        update.setParameters(parameters);
+        service.updateDevice(update, update, deviceType, deviceId);
+        // Battery Leve
+        verify(mockGauges, times(1)).setNumericGauge(
+                eq("curtain_position"),
+                anyString(),
+                eq(parameters.getPosition().doubleValue()),
+                eq(Map.of("device_id", deviceId))
+        );
+    }
+
+    @Test
+    void testDeleteDevice_doesNotThrow() {
+        assertDoesNotThrow(() -> service.deleteDevice("test"));
     }
 }

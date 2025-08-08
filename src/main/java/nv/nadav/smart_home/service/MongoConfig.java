@@ -5,6 +5,9 @@ import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import nv.nadav.smart_home.config.MongoProperties;
+import nv.nadav.smart_home.serialization.DeviceReadConverter;
+import nv.nadav.smart_home.serialization.DeviceWriteConverter;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.lang.NonNull;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,6 +15,7 @@ import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.List;
 
 @Configuration
 public class MongoConfig extends AbstractMongoClientConfiguration {
@@ -66,5 +70,15 @@ public class MongoConfig extends AbstractMongoClientConfiguration {
         } catch (URISyntaxException e) {
             throw new IllegalStateException("Failed to construct MongoClient URI", e);
         }
+    }
+
+    @Bean
+    public MongoCustomConversions mongoCustomConversions() {
+        return new MongoCustomConversions(
+                List.of(
+                        new DeviceReadConverter(),
+                        new DeviceWriteConverter()
+                )
+        );
     }
 }

@@ -141,7 +141,6 @@ public class DeviceMetricsServiceImpl implements DeviceMetricsService {
     }
 
     private void flipDeviceBooleanFlag(String metricName, String deviceId, boolean newValue) {
-        System.out.println("Flipping metric " + metricName + " for " + deviceId + " to " + newValue);
         gaugeManager.setBooleanGauge(
                 metricName,
                 metricDescriptions.get(metricName),
@@ -267,14 +266,14 @@ public class DeviceMetricsServiceImpl implements DeviceMetricsService {
                 if (newIsHeating != null) {
                     flipDeviceBooleanFlag(
                             "water_heater_is_heating_status",
-                            metricDescriptions.get("water_heater_is_heating_status"),
+                            deviceId,
                             newIsHeating
                     );
                 }
                 if (newTimerEnabled != null) {
                     flipDeviceBooleanFlag(
                             "water_heater_timer_enabled_status",
-                            metricDescriptions.get("water_heater_timer_enabled_status"),
+                            deviceId,
                             newTimerEnabled
                     );
                 }
@@ -400,7 +399,7 @@ public class DeviceMetricsServiceImpl implements DeviceMetricsService {
                 if (newAutoLockEnabled != null) {
                     flipDeviceBooleanFlag(
                             "auto_lock_enabled",
-                            metricDescriptions.get("auto_lock_enabled"),
+                            deviceId,
                             newAutoLockEnabled
                     );
                 }
