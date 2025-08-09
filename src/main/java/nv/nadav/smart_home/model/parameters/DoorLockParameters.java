@@ -9,7 +9,10 @@ import static nv.nadav.smart_home.constants.Constants.MAX_BATTERY;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class DoorLockParameters extends DeviceParameters {
     @JsonProperty("auto_lock_enabled")
@@ -71,5 +74,17 @@ public class DoorLockParameters extends DeviceParameters {
     @Override
     public int hashCode() {
         return Objects.hash(autoLockEnabled, batteryLevel);
+    }
+
+    @Override
+    public String toString() {
+        String result = Stream.of(
+                        Map.entry("Auto-Lock Enabled", autoLockEnabled),
+                        Map.entry("Battery Level", batteryLevel)
+                )
+                .filter(e -> e.getValue() != null)
+                .map(e -> e.getKey() + ": " + e.getValue())
+                .collect(Collectors.joining(", ", "{", "}"));
+        return ((result.equals("{}")) ? "{Empty}" : result);
     }
 }

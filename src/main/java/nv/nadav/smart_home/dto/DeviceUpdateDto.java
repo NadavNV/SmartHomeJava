@@ -9,7 +9,10 @@ import nv.nadav.smart_home.serialization.DelegatingParametersDeserializer;
 import nv.nadav.smart_home.serialization.DeviceParametersDeserializer;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @JsonIgnoreProperties(ignoreUnknown = false)
 public class DeviceUpdateDto {
@@ -92,5 +95,19 @@ public class DeviceUpdateDto {
     @Override
     public int hashCode() {
         return Objects.hash(name, room, status, parameters);
+    }
+
+    @Override
+    public String toString() {
+        String result = Stream.of(
+                        Map.entry("Name", name),
+                        Map.entry("Room", room),
+                        Map.entry("Status", status),
+                        Map.entry("Parameters", parameters)
+                )
+                .filter(e -> e.getValue() != null)
+                .map(e -> e.getKey() + ": " + e.getValue())
+                .collect(Collectors.joining(", ", "{", "}"));
+        return ((result.equals("{}")) ? "{Empty}" : result);
     }
 }

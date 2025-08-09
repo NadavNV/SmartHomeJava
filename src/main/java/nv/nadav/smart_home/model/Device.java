@@ -9,6 +9,8 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
+import java.util.Objects;
+
 @Document(collection = "devices")
 public class Device {
     @Id
@@ -89,7 +91,29 @@ public class Device {
         return newDevice;
     }
 
-    public void update(DeviceUpdateDto data) {
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            // Same reference
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            // null or different class
+            return false;
+        }
+        Device other = (Device) obj;
+        return (Objects.equals(this._id, other.get_id()) &&
+                Objects.equals(this.deviceId, other.getDeviceId()) &&
+                Objects.equals(this.name, other.getName()) &&
+                Objects.equals(this.type, other.getType()) &&
+                Objects.equals(this.room, other.getRoom()) &&
+                Objects.equals(this.status, other.getStatus()) &&
+                Objects.equals(this.parameters, other.getParameters())
+        );
+    }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(_id, deviceId, name, room, type, status, parameters);
     }
 }

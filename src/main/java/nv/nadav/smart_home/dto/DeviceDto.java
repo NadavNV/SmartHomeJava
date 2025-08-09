@@ -97,4 +97,12 @@ public class DeviceDto {
     public int hashCode() {
         return Objects.hash(id, type, name, room, status, parameters);
     }
+
+    @Override
+    public String toString() {
+        return String.format(
+                "{ID: %s, Type: %s, Name: %s, Room: %s, Status: %s, Parameters: %s}",
+                id, type, name, room, status, parameters
+        );
+    }
 }

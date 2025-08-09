@@ -1,9 +1,11 @@
 package nv.nadav.smart_home.controller;
 
 import com.mongodb.client.MongoClient;
+import nv.nadav.smart_home.config.SecurityConfig;
 import nv.nadav.smart_home.service.MqttService;
 import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
 
+@Import(SecurityConfig.class)
 @RestController
 public class HealthController {
 

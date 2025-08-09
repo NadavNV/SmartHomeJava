@@ -5,7 +5,10 @@ import nv.nadav.smart_home.validation.Validators;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static nv.nadav.smart_home.constants.Constants.MAX_WATER_TEMP;
 import static nv.nadav.smart_home.constants.Constants.MIN_WATER_TEMP;
@@ -132,5 +135,21 @@ public class WaterHeaterParameters extends DeviceParameters {
                 temperature, targetTemperature, isHeating,
                 timerEnabled, scheduledOff, scheduledOn
         );
+    }
+
+    @Override
+    public String toString() {
+        String result = Stream.of(
+                        Map.entry("Temperature", temperature),
+                        Map.entry("Target Temperature", targetTemperature),
+                        Map.entry("Currently Heating", isHeating),
+                        Map.entry("Timer Enabled", timerEnabled),
+                        Map.entry("Scheduled On", scheduledOn),
+                        Map.entry("Scheduled Off", scheduledOff)
+                )
+                .filter(e -> e.getValue() != null)
+                .map(e -> e.getKey() + ": " + e.getValue())
+                .collect(Collectors.joining(", ", "{", "}"));
+        return ((result.equals("{}")) ? "{Empty}" : result);
     }
 }

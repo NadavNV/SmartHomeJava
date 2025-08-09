@@ -5,7 +5,10 @@ import nv.nadav.smart_home.validation.Validators;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static nv.nadav.smart_home.constants.Constants.MAX_BRIGHTNESS;
 import static nv.nadav.smart_home.constants.Constants.MIN_BRIGHTNESS;
@@ -119,5 +122,19 @@ public class LightParameters extends DeviceParameters {
     @Override
     public int hashCode() {
         return Objects.hash(brightness, color, isDimmable, dynamicColor);
+    }
+
+    @Override
+    public String toString() {
+        String result = Stream.of(
+                        Map.entry("Brightness", brightness),
+                        Map.entry("Color", color),
+                        Map.entry("Dimmable", isDimmable),
+                        Map.entry("Dynamic Color", dynamicColor)
+                )
+                .filter(e -> e.getValue() != null)
+                .map(e -> e.getKey() + ": " + e.getValue())
+                .collect(Collectors.joining(", ", "{", "}"));
+        return ((result.equals("{}")) ? "{Empty}" : result);
     }
 }

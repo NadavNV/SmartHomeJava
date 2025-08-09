@@ -13,16 +13,11 @@
     <!-- Rolling File Appender -->
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>logs/backend.log</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <!-- File name pattern for rolled files -->
             <fileNamePattern>logs/backend.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
-
             <!-- Trigger rollover if file exceeds 10MB -->
-            <timeBasedFileNamingAndTriggeringPolicy
-                    class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
-                <maxFileSize>10MB</maxFileSize>
-            </timeBasedFileNamingAndTriggeringPolicy>
-
+            <maxFileSize>10MB</maxFileSize>
             <!-- Keep 7 days' worth of logs -->
             <maxHistory>7</maxHistory>
         </rollingPolicy>

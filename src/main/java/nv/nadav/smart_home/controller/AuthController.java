@@ -1,8 +1,10 @@
 package nv.nadav.smart_home.controller;
 
+import nv.nadav.smart_home.config.SecurityConfig;
 import nv.nadav.smart_home.service.JwtService;
 import nv.nadav.smart_home.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
 
+@Import(SecurityConfig.class)
 @RestController
 public class AuthController {
     @Autowired

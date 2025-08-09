@@ -1,20 +1,27 @@
 package nv.nadav.smart_home.service.impl;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import nv.nadav.smart_home.service.GaugeManager;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 import com.google.common.util.concurrent.AtomicDouble;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
 public class GaugeManagerImpl implements GaugeManager {
 
     private final MeterRegistry registry;
-    private final ConcurrentHashMap<String, AtomicDouble> gauges = new ConcurrentHashMap<>();
+    private final Cache<@NotNull String, AtomicDouble> gauges = Caffeine.newBuilder()
+            .maximumSize(1_000)
+            .expireAfterAccess(168, TimeUnit.HOURS)  // One week
+            .build();
 
     public GaugeManagerImpl(MeterRegistry registry) {
         this.registry = registry;
@@ -46,7 +53,7 @@ public class GaugeManagerImpl implements GaugeManager {
         String prefix = name + "|device_id=" + deviceId;
 
         // Reset all existing gauges with same device_id
-        gauges.entrySet().stream()
+        gauges.asMap().entrySet().stream()
                 .filter(e -> e.getKey().startsWith(prefix))
                 .forEach(e -> e.getValue().set(0.0));
 
@@ -56,7 +63,7 @@ public class GaugeManagerImpl implements GaugeManager {
     @Override
     public void setNumericGauge(String name, String description, double value, Map<String, String> tags) {
         String key = buildKey(name, tags);
-        AtomicDouble ref = gauges.computeIfAbsent(key, k -> {
+        AtomicDouble ref = gauges.asMap().computeIfAbsent(key, k -> {
             AtomicDouble newRef = new AtomicDouble(value);
             Gauge.Builder<AtomicDouble> builder = Gauge.builder(name, newRef, AtomicDouble::get).description(description);
             tags.forEach(builder::tag);

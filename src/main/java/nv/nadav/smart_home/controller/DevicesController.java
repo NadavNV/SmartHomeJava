@@ -4,6 +4,7 @@ package nv.nadav.smart_home.controller;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
+import nv.nadav.smart_home.config.SecurityConfig;
 import nv.nadav.smart_home.dto.DeviceDto;
 import nv.nadav.smart_home.dto.DeviceUpdateDto;
 import nv.nadav.smart_home.exception.DeviceExistsException;
@@ -11,6 +12,7 @@ import nv.nadav.smart_home.exception.DeviceNotFoundException;
 import nv.nadav.smart_home.exception.DeviceValidationException;
 import nv.nadav.smart_home.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +21,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+@Import(SecurityConfig.class)
 @RestController
 @RequestMapping("/api/")
 public class DevicesController {

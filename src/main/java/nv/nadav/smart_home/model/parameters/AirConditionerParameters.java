@@ -9,7 +9,10 @@ import static nv.nadav.smart_home.constants.Constants.MAX_AC_TEMP;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static nv.nadav.smart_home.validation.Validators.verifyTypeAndRange;
 
@@ -187,5 +190,19 @@ public class AirConditionerParameters extends DeviceParameters {
     @Override
     public int hashCode() {
         return Objects.hash(temperature, mode, swing, fanSpeed);
+    }
+
+    @Override
+    public String toString() {
+        String result = Stream.of(
+                        Map.entry("Temperature", temperature),
+                        Map.entry("Mode", mode),
+                        Map.entry("Swing", swing),
+                        Map.entry("Fan Speed", fanSpeed)
+                )
+                .filter(e -> e.getValue() != null)
+                .map(e -> e.getKey() + ": " + e.getValue())
+                .collect(Collectors.joining(", ", "{", "}"));
+        return ((result.equals("{}")) ? "{Empty}" : result);
     }
 }

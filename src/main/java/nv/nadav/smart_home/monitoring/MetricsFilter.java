@@ -32,7 +32,7 @@ public class MetricsFilter extends OncePerRequestFilter {
                 request.getMethod(),
                 request.getRequestURI(),
                 response.getStatus(),
-                TimeUnit.NANOSECONDS.toMillis(duration)
+                duration
         );
     }
 }

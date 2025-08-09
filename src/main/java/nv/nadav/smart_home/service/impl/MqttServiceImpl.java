@@ -9,8 +9,6 @@ import nv.nadav.smart_home.dto.DeviceDto;
 import nv.nadav.smart_home.dto.DeviceUpdateDto;
 import nv.nadav.smart_home.exception.DeviceNotFoundException;
 import nv.nadav.smart_home.exception.DeviceValidationException;
-import nv.nadav.smart_home.serialization.DelegatingParametersDeserializer;
-import nv.nadav.smart_home.serialization.DeviceParametersDeserializer;
 import nv.nadav.smart_home.service.DeviceMetricsService;
 import nv.nadav.smart_home.service.DeviceService;
 import nv.nadav.smart_home.service.MqttService;

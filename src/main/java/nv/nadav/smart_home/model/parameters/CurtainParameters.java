@@ -4,7 +4,10 @@ import nv.nadav.smart_home.validation.Validators;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static nv.nadav.smart_home.constants.Constants.MAX_POSITION;
 import static nv.nadav.smart_home.constants.Constants.MIN_POSITION;
@@ -56,5 +59,16 @@ public class CurtainParameters extends DeviceParameters {
     @Override
     public int hashCode() {
         return Objects.hash(position);
+    }
+
+    @Override
+    public String toString() {
+        String result = Stream.of(
+                        Map.entry("Position", position)
+                )
+                .filter(e -> e.getValue() != null)
+                .map(e -> e.getKey() + ": " + e.getValue())
+                .collect(Collectors.joining(", ", "{", "}"));
+        return ((result.equals("{}")) ? "{Empty}" : result);
     }
 }
